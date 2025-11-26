@@ -1,0 +1,98 @@
+[project]
+name = 'maya4'
+version = '0.1.0'
+description = 'SAR data processing and focusing utilities with dataloader for Sentinel-1 products'
+authors = [
+  { name = 'Roberto Del Prete', email = 'roberto.delprete@esa.int' }
+]
+
+dependencies = [
+  'pandas>=1.5.2',
+  'numpy>=1.24.0',
+  'torch>=2.0.0',
+  'zarr>=2.14.0',
+  'dask[array]>=2023.5.0',
+  'tqdm>=4.65.0',
+  'matplotlib>=3.7.0',
+  'scikit-learn>=1.3.0',
+  'huggingface-hub>=0.16.0',
+  'numcodecs>=0.11.0',
+  'shapely>=2.0.0',
+  'pyarrow>=14.0.0',
+  'phidown>=0.1.22',
+]
+
+requires-python = '>=3.9'
+license = { text = 'GPLv3' }
+
+[project.optional-dependencies]
+jupyter_env = [
+  'ipykernel>=6.30.1',
+  'jupyterlab-widgets>=3.0.15',
+  'jupyter-leaflet>=0.20.0',
+  'ipywidgets>=8.1.6',
+]
+geospatial = [
+  'geopandas>=0.14.0',
+  'leafmap>=0.52.2',
+  'folium>=0.18.0',
+  'geopy>=2.4.0',
+]
+dev = [
+  'pytest>=7.0.0,<9.0.0',
+  'pytest-mock>=3.10.0',
+  'flake8>=6.0.0,<8.0.0',
+  'black>=23.0.0',
+  'isort>=5.12.0',
+]
+docs = [
+  'sphinx>=7.0.0,<8.0.0',
+  'sphinx-rtd-theme>=1.3.0,<4.0.0',
+  'sphinx-autodoc-typehints>=1.24.0,<3.0.0',
+  'myst-parser>=3.0.0,<4.0.0',
+  'sphinx-copybutton>=0.5.0',
+  'sphinx-autoapi>=2.5.0,<4.0.0',
+]
+
+[build-system]
+requires = ['pdm-backend']
+build-backend = 'pdm.backend'
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.build]
+includes = ['maya4/**']
+
+[tool.pdm.sdist]
+includes = ['maya4/**', 'README.md', 'LICENSE']
+
+[tool.pdm.wheel]
+universal = true
+
+[tool.black]
+line-length = 120
+target-version = ['py39', 'py310', 'py311']
+include = '\\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \\.eggs
+  | \\.git
+  | \\.hg
+  | \\.mypy_cache
+  | \\.tox
+  | \\.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = 'black'
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true

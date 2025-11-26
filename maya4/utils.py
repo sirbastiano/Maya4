@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple, Union
-from location_utils import get_products_spatial_mapping
+from maya4.location_utils import get_products_spatial_mapping
 from create_balanced_dataset_splits import create_balanced_splits
 import torch
 import zarr
@@ -16,7 +16,7 @@ LOCATIONS_CSV_FILENAME = 'sar_products_locations.csv'
 
 try:
     # Attempt to import when package initialization order allows it
-    from dataloader import SARTransform, get_sar_dataloader  # type: ignore[attr-defined]
+    from maya4.dataloader import SARTransform, get_sar_dataloader  # type: ignore[attr-defined]
 except ImportError:
     # During package initialization this may fail due to circular imports.
     # Defer the import until runtime when these helpers are first needed.
@@ -1025,7 +1025,7 @@ def create_dataloader_from_config(data_dir, dataloader_cfg, split_cfg, transform
 def create_dataloaders(dataloader_cfg):
     """Create train, validation, and test dataloaders (same as original)."""
     # Import here to avoid circular import
-    from location_utils import get_products_spatial_mapping
+    from maya4.location_utils import get_products_spatial_mapping
     
     data_dir = dataloader_cfg.get('data_dir', '/Data/sar_focusing_new')
 

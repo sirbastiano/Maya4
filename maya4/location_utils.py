@@ -198,7 +198,7 @@ def get_products_spatial_mapping(author: str, repos: List[str], data_dir: Union[
     all_products = []
 
     # try:
-    from api import list_repos_by_author, list_base_files_in_repo
+    from maya4.api import list_repos_by_author, list_base_files_in_repo
 
     if not overwrite_csv and output_csv_file_path is not None and os.path.exists(Path(output_csv_file_path)):
         df = pd.read_csv(Path(output_csv_file_path))

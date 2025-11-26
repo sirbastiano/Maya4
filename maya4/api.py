@@ -38,7 +38,7 @@ except ImportError:
         def close(self):
             print()  # New line after completion
 
-from utils import get_chunk_name_from_coords
+from maya4.utils import get_chunk_name_from_coords
 
 # Global locks for thread-safe downloading
 _download_locks = {}
