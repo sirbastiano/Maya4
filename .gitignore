@@ -1,0 +1,47 @@
+# Standard Python .gitignore
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# PDFs
+*.pdf
+
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Folders
+sebastianCode
+output
+data_exploration
