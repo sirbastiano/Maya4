@@ -1,7 +1,5 @@
 <div align="center">
 
-# 🌌 Maya4
-
 ![Maya4 Logo](./src/Maya4.png)
 
 
