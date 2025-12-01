@@ -1,5 +1,5 @@
 import torch 
-from typing import Tuple
+from typing import Tuple, Optional
 import numpy as np
 
 class PositionalEncoding: 
@@ -148,11 +148,13 @@ class PositionalEncodingRow(PositionalEncoding):
             torch.Tensor: Tensor with positional encoding removed.
         """
         pass
-    
-def create_positional_encoding_module(name: str, complex_valued: bool = False, concat: bool = True) -> PositionalEncoding:
+
+def create_positional_encoding_module(name: str, complex_valued: bool = False, concat: bool = True) -> Optional[PositionalEncoding]:
     if name == "2d":
         return PositionalEncoding2D(complex_valued=complex_valued, concat=concat)
     elif name == "row":
         return PositionalEncodingRow(complex_valued=complex_valued, concat=concat)
+    elif name == "none" or name is None or name is False:
+        return None
     else:
         raise ValueError(f"Unknown positional encoding name: {name}")

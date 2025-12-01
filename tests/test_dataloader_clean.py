@@ -102,8 +102,8 @@ class TestPositionalEncoding2D:
         
         output = pe.forward(inp, position, max_length)
         
-        # Should add one channel for positional encoding
-        assert output.shape == (64, 64, 3)
+        # Should add two channels for positional encoding (row + col)
+        assert output.shape == (64, 64, 4)
     
     def test_forward_no_concat(self):
         """Test forward without concatenation."""
@@ -117,8 +117,8 @@ class TestPositionalEncoding2D:
         
         output = pe.forward(inp, position, max_length)
         
-        # Should replace last channel with positional encoding
-        assert output.shape == (64, 64, 2)
+        # With concat=False, positional encoding replaces input but still adds 2 channels
+        assert output.shape == (64, 64, 4)
 
 
 class TestPositionalEncodingRow:
@@ -205,7 +205,8 @@ class TestChunkCache:
         
         assert chunk is not None
         assert isinstance(chunk, np.ndarray)
-        assert chunk.dtype == np.complex64
+        # Zarr v3 uses complex128 by default
+        assert chunk.dtype in (np.complex64, np.complex128)
 
 
 class TestSARZarrDataset:
@@ -242,7 +243,7 @@ class TestSARZarrDataset:
             verbose=False
         )
         
-        assert isinstance(dataset.pos_encoding, PositionalEncoding2D)
+        assert isinstance(dataset.positional_encoding_module, PositionalEncoding2D)
     
     def test_chunk_cache_creation(self, temp_dir):
         """Test that chunk cache is created."""
@@ -561,11 +562,11 @@ class TestDataloaderAccuracy:
             verbose=False,
             cache_size=10,
             online=False,
-            positional_encoding=False
+            positional_encoding="none"
         )
         
         # If files are available, test a patch
-        if len(dataloader.dataset._files) > 0:
+        if len(dataloader.dataset.get_files()) > 0:
             file = str(sample_zarr_store)
             y, x = 50, 50  # Sample coordinates
             

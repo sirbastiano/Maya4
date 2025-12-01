@@ -29,9 +29,26 @@ import matplotlib.pyplot as plt
 from maya4.caching import ChunkCache
 from maya4.coords_generation import LazyCoordinateRange, LazyCoordinateGenerator
 from maya4.normalization import BaseTransformModule, SARTransform
-from maya4.positional_encoding import create_positional_encoding_module
+from maya4.positional_encoding import (
+    create_positional_encoding_module,
+    PositionalEncoding2D,
+    PositionalEncodingRow
+)
 from matplotlib.figure import Figure
 
+# Export classes for external use
+__all__ = [
+    'SARZarrDataset',
+    'KPatchSampler',
+    'SARDataloader',
+    'get_sar_dataloader',
+    'LazyCoordinateRange',
+    'LazyCoordinateGenerator',
+    'ChunkCache',
+    'PositionalEncoding2D',
+    'PositionalEncodingRow',
+    'create_positional_encoding_module'
+]
 
 
 class SARZarrDataset(Dataset):
@@ -157,6 +174,8 @@ class SARZarrDataset(Dataset):
 
         self._y_coords: Dict[os.PathLike, np.ndarray] = {}
         self._x_coords: Dict[os.PathLike, np.ndarray] = {}
+        self._stores: Dict[os.PathLike, Dict[str, zarr.Array]] = {}
+        self._samples_by_file: Dict[os.PathLike, List[Tuple[int, int]]] = {}
 
         self._initialize_stores()
         if self.verbose:
