@@ -8,7 +8,10 @@ import numpy as np
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple, Union
 from maya4.location_utils import get_products_spatial_mapping
-from create_balanced_dataset_splits import create_balanced_splits
+try:
+    from create_balanced_dataset_splits import create_balanced_splits
+except ImportError:
+    create_balanced_splits = None
 import torch
 import zarr
 

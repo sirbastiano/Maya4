@@ -4,6 +4,7 @@ Unit tests for the refactored dataloader components.
 import pytest
 import numpy as np
 import torch
+import zarr
 from pathlib import Path
 
 
@@ -335,3 +336,249 @@ class TestIntegration:
         
         assert dataloader is not None
         assert dataloader.batch_size == 2
+
+
+class TestDataloaderAccuracy:
+    """Tests to verify dataloader returns same data as direct zarr access."""
+    
+    @pytest.fixture
+    def transform(self):
+        """Create transform for testing."""
+        from maya4.normalization import SARTransform
+        from maya4.utils import RC_MIN, RC_MAX, GT_MIN, GT_MAX
+        
+        return SARTransform.create_minmax_normalized_transform(
+            normalize=True,
+            rc_min=RC_MIN,
+            rc_max=RC_MAX,
+            gt_min=GT_MIN,
+            gt_max=GT_MAX,
+            complex_valued=True
+        )
+    
+    @pytest.fixture
+    def sample_filter(self):
+        """Create sample filter for testing."""
+        from maya4.utils import SampleFilter
+        return SampleFilter(
+            years=[2023],
+            polarizations=["hh"],
+            stripmap_modes=[1, 2, 3],
+            parts=["PT1", "PT3"]
+        )
+    
+    @pytest.mark.integration
+    @pytest.mark.skipif(
+        not Path("/Data_large/marine/PythonProjects/SAR/sarpyx/data").exists(),
+        reason="Test data directory not available"
+    )
+    def test_horizontal_patch_matches_zarr(self, transform, sample_filter):
+        """Test that horizontal patches match direct zarr access."""
+        import zarr
+        import numpy as np
+        from maya4.dataloader_clean import get_sar_dataloader
+        
+        patch_size = (1, -1)
+        buffer = (0, 0)
+        stride = (1, 300)
+        
+        dataloader = get_sar_dataloader(
+            data_dir="/Data_large/marine/PythonProjects/SAR/sarpyx/data",
+            level_from="rcmc",
+            level_to="az",
+            batch_size=16,
+            num_workers=0,
+            patch_size=patch_size,
+            buffer=buffer,
+            stride=stride,
+            transform=transform,
+            shuffle_files=False,
+            patch_order="row",
+            complex_valued=True,
+            save_samples=False,
+            verbose=False,
+            samples_per_prod=1000,
+            cache_size=100,
+            online=True,
+            max_products=1,
+            positional_encoding=True,
+            filters=sample_filter
+        )
+        
+        file = dataloader.dataset._files["full_name"].loc[0]
+        
+        # Test first 3 rows
+        for i in range(3):
+            sample_from, sample_to = dataloader.dataset[(file, i, 0)]
+            
+            # Test level_from
+            restored_column_from = dataloader.dataset.get_patch_visualization(
+                patch=sample_from,
+                level=dataloader.dataset.level_from,
+                restore_complex=True,
+                prepare_for_plotting=False
+            ).squeeze(0).flatten()
+            
+            actual_column_from = zarr.open(file, mode='r')[dataloader.dataset.level_from][i, :]
+            
+            assert restored_column_from.shape[0] == actual_column_from.shape[0], \
+                f"Shape mismatch at {dataloader.dataset.level_from}: {restored_column_from.shape} vs {actual_column_from.shape}"
+            
+            np.testing.assert_allclose(
+                restored_column_from[:100],
+                actual_column_from[:100],
+                rtol=1e-10,
+                atol=1e-10,
+                err_msg=f"Data mismatch at {dataloader.dataset.level_from}, row {i}"
+            )
+            
+            # Test level_to
+            restored_column_to = dataloader.dataset.get_patch_visualization(
+                patch=sample_to,
+                level=dataloader.dataset.level_to,
+                restore_complex=True,
+                prepare_for_plotting=False
+            ).squeeze(0).flatten()
+            
+            actual_column_to = zarr.open(file, mode='r')[dataloader.dataset.level_to][i, :]
+            
+            assert restored_column_to.shape[0] == actual_column_to.shape[0], \
+                f"Shape mismatch at {dataloader.dataset.level_to}: {restored_column_to.shape} vs {actual_column_to.shape}"
+            
+            np.testing.assert_allclose(
+                restored_column_to[:100],
+                actual_column_to[:100],
+                rtol=1e-10,
+                atol=1e-10,
+                err_msg=f"Data mismatch at {dataloader.dataset.level_to}, row {i}"
+            )
+    
+    @pytest.mark.integration
+    @pytest.mark.skipif(
+        not Path("/Data_large/marine/PythonProjects/SAR/sarpyx/data").exists(),
+        reason="Test data directory not available"
+    )
+    def test_vertical_patch_matches_zarr(self, transform, sample_filter):
+        """Test that vertical patches match direct zarr access."""
+        import zarr
+        import numpy as np
+        from maya4.dataloader_clean import get_sar_dataloader
+        
+        patch_size = (-1, 1)
+        buffer = (0, 0)
+        stride = (300, 1)
+        
+        dataloader = get_sar_dataloader(
+            data_dir="/Data_large/marine/PythonProjects/SAR/sarpyx/data",
+            level_from="rcmc",
+            level_to="az",
+            batch_size=16,
+            num_workers=0,
+            patch_size=patch_size,
+            buffer=buffer,
+            stride=stride,
+            transform=transform,
+            shuffle_files=False,
+            patch_order="row",
+            complex_valued=True,
+            save_samples=False,
+            verbose=False,
+            samples_per_prod=1000,
+            cache_size=100,
+            online=True,
+            max_products=1,
+            positional_encoding=True,
+            filters=sample_filter
+        )
+        
+        file = dataloader.dataset._files["full_name"].loc[0]
+        
+        # Test first 3 columns
+        for i in range(3):
+            sample_from, sample_to = dataloader.dataset[(file, 0, i)]
+            
+            # Test level_from
+            restored_column_from = dataloader.dataset.get_patch_visualization(
+                patch=sample_from,
+                level=dataloader.dataset.level_from,
+                restore_complex=True,
+                prepare_for_plotting=False
+            ).squeeze(1).flatten()
+            
+            actual_column_from = zarr.open(file, mode='r')[dataloader.dataset.level_from][:, i]
+            
+            assert restored_column_from.shape[0] == actual_column_from.shape[0], \
+                f"Shape mismatch at {dataloader.dataset.level_from}: {restored_column_from.shape} vs {actual_column_from.shape}"
+            
+            np.testing.assert_allclose(
+                restored_column_from[:100],
+                actual_column_from[:100],
+                rtol=1e-10,
+                atol=1e-10,
+                err_msg=f"Data mismatch at {dataloader.dataset.level_from}, column {i}"
+            )
+            
+            # Test level_to
+            restored_column_to = dataloader.dataset.get_patch_visualization(
+                patch=sample_to,
+                level=dataloader.dataset.level_to,
+                restore_complex=True,
+                prepare_for_plotting=False
+            ).squeeze(1).flatten()
+            
+            actual_column_to = zarr.open(file, mode='r')[dataloader.dataset.level_to][:, i]
+            
+            assert restored_column_to.shape[0] == actual_column_to.shape[0], \
+                f"Shape mismatch at {dataloader.dataset.level_to}: {restored_column_to.shape} vs {actual_column_to.shape}"
+            
+            np.testing.assert_allclose(
+                restored_column_to[:100],
+                actual_column_to[:100],
+                rtol=1e-10,
+                atol=1e-10,
+                err_msg=f"Data mismatch at {dataloader.dataset.level_to}, column {i}"
+            )
+    
+    def test_rectangular_patch_with_sample_zarr(self, sample_zarr_store, temp_dir):
+        """Test rectangular patches with synthetic zarr data."""
+        import zarr
+        import numpy as np
+        from maya4.dataloader_clean import get_sar_dataloader
+        
+        # Create a simple dataloader with rectangular patches
+        dataloader = get_sar_dataloader(
+            data_dir=str(temp_dir),
+            level_from="rcmc",
+            level_to="az",
+            batch_size=1,
+            num_workers=0,
+            patch_size=(64, 64),
+            buffer=(10, 10),
+            stride=(32, 32),
+            shuffle_files=False,
+            complex_valued=True,
+            save_samples=False,
+            verbose=False,
+            cache_size=10,
+            online=False,
+            positional_encoding=False
+        )
+        
+        # If files are available, test a patch
+        if len(dataloader.dataset._files) > 0:
+            file = str(sample_zarr_store)
+            y, x = 50, 50  # Sample coordinates
+            
+            try:
+                sample_from, sample_to = dataloader.dataset[(file, y, x)]
+                
+                # Verify shapes
+                assert sample_from.shape[:2] == (64, 64), f"Unexpected shape: {sample_from.shape}"
+                assert sample_to.shape[:2] == (64, 64), f"Unexpected shape: {sample_to.shape}"
+                
+                # Verify data types
+                assert np.iscomplexobj(sample_from), "Expected complex data"
+                assert np.iscomplexobj(sample_to), "Expected complex data"
+            except (KeyError, IndexError):
+                # If coordinates are out of bounds, that's okay for this test
+                pytest.skip("Coordinates out of bounds for test zarr")

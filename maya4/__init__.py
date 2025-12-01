@@ -76,10 +76,11 @@ from .location_utils import (
     get_location_for_zarr_file,
 )
 
-from .dataset_creation import (
-    save_array_to_zarr,
-    dask_slice_saver,
-)
+# dataset_creation module was removed/refactored
+# from .dataset_creation import (
+#     save_array_to_zarr,
+#     dask_slice_saver,
+# )
 
 # Define public API
 __all__ = [
@@ -133,9 +134,9 @@ __all__ = [
     'extract_location_from_zarr_filename_with_phidown',
     'get_location_for_zarr_file',
     
-    # Dataset creation
-    'save_array_to_zarr',
-    'dask_slice_saver',
+    # Dataset creation - removed/refactored
+    # 'save_array_to_zarr',
+    # 'dask_slice_saver',
     
     # Constants
     'RC_MAX',

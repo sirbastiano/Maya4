@@ -29,26 +29,32 @@ def sample_zarr_store(temp_dir):
     store = zarr.open_group(str(zarr_path), mode='w')
     
     # Add sample arrays for different processing levels
-    store.create_dataset(
+    rcmc_data = np.random.randn(height, width) + 1j * np.random.randn(height, width)
+    store.create_array(
         'rcmc',
-        data=np.random.randn(height, width) + 1j * np.random.randn(height, width),
+        shape=(height, width),
         chunks=(128, 128),
         dtype='complex64'
     )
+    store['rcmc'][:] = rcmc_data
     
-    store.create_dataset(
+    az_data = np.random.randn(height, width) + 1j * np.random.randn(height, width)
+    store.create_array(
         'az',
-        data=np.random.randn(height, width) + 1j * np.random.randn(height, width),
+        shape=(height, width),
         chunks=(128, 128),
         dtype='complex64'
     )
+    store['az'][:] = az_data
     
-    store.create_dataset(
+    rc_data = np.random.randn(height, width) + 1j * np.random.randn(height, width)
+    store.create_array(
         'rc',
-        data=np.random.randn(height, width) + 1j * np.random.randn(height, width),
+        shape=(height, width),
         chunks=(128, 128),
         dtype='complex64'
     )
+    store['rc'][:] = rc_data
     
     # Add metadata
     store.attrs['parent_product'] = 'S1A_IW_SLC__1SSH_20250101T000000_stripmap_mode_1'
