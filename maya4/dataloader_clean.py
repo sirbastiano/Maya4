@@ -176,6 +176,9 @@ class SARZarrDataset(Dataset):
         self._x_coords: Dict[os.PathLike, np.ndarray] = {}
         self._stores: Dict[os.PathLike, Dict[str, zarr.Array]] = {}
         self._samples_by_file: Dict[os.PathLike, List[Tuple[int, int]]] = {}
+        
+        # DataFrame to store file metadata and lazy coordinates
+        self._files: Optional[pd.DataFrame] = None
 
         self._initialize_stores()
         if self.verbose:
@@ -273,11 +276,115 @@ class SARZarrDataset(Dataset):
         # Placeholder - implement based on your storage structure
         return zarr.open(str(Path(zfile) / level), mode='r')
     
+    def _build_file_list(self):
+        """
+        Build the list of zarr files to use, either from local directory or remote HuggingFace.
+        Creates a pandas DataFrame with file metadata.
+        """
+        if self.online:
+            # Get files from remote HuggingFace repositories
+            repos = list_repos_by_author(self.author)
+            if self.verbose:
+                print(f"Found {len(repos)} repositories by author '{self.author}': {repos}")
+            
+            remote_files = {}
+            for repo in repos:
+                repo_files = list_base_files_in_repo(repo_id=repo)
+                if self.verbose:
+                    print(f"Found {len(repo_files)} files in remote repository: '{repo}'")
+                repo_name = repo.split('/')[-1]
+                remote_files[repo_name] = repo_files
+            
+            # Parse filenames to get metadata
+            records = [
+                r for r in (
+                    parse_product_filename(os.path.join(self.data_dir, part, f)) 
+                    for part, files in remote_files.items() 
+                    for f in files
+                ) if r is not None
+            ]
+            if self.verbose:
+                print(f"Total files found in remote repository: {len(records)}")
+            df = pd.DataFrame(records)
+        else:
+            # Get files from local directory
+            all_files = []
+            if self.data_dir.exists():
+                for part_dir in self.data_dir.iterdir():
+                    if part_dir.is_dir():
+                        for zfile in part_dir.glob("*.zarr"):
+                            all_files.append(zfile)
+            
+            if self.verbose:
+                print(f"Found {len(all_files)} local zarr files")
+            
+            # Parse filenames to get metadata
+            records = [r for r in (parse_product_filename(str(f)) for f in all_files) if r is not None]
+            df = pd.DataFrame(records)
+        
+        # Filter files using SampleFilter
+        self._files = self.filters._filter_products(df)
+        self._files.sort_values(by=['full_name'], inplace=True)
+        
+        # Apply balanced sampling if enabled
+        if self.use_balanced_sampling:
+            balanced_files = get_balanced_sample_files(
+                max_samples=self._max_products,
+                data_dir=self.data_dir,
+                sample_filter=self.filters,
+                config_path=str(self.data_dir),
+                verbose=self.verbose,
+                split_type=self.split,
+                repos=self.filters.parts if self.filters.parts else ['PT1', 'PT2', 'PT3', 'PT4']
+            )
+            if balanced_files:
+                balanced_paths = [Path(f) for f in balanced_files]
+                self._files = self._files[self._files['full_name'].isin(balanced_paths)]
+                if self.verbose:
+                    print(f"Applied balanced sampling: selected {len(self._files)} files from {len(balanced_files)} balanced candidates")
+            else:
+                if self.verbose:
+                    print("Warning: Balanced sampling returned no files, falling back to standard selection")
+                self._files = self._files.iloc[:self._max_products]
+        else:
+            self._files = self._files.iloc[:self._max_products]
+        
+        # Add columns for stores and samples
+        self._files['store'] = None
+        self._files['samples'] = None
+        
+        if self.verbose:
+            print(f"Selected {len(self._files)} files after filtering")
+            print(f"Files: {self._files['full_name'].tolist()}")
+    
     def _initialize_stores(self):
         """
-        Initialize zarr stores (placeholder for now).
+        Initialize zarr stores and prepare file list.
+        Opens zarr stores for each file and stores them in the DataFrame.
         """
-        pass
+        t0 = time.time()
+        self._build_file_list()
+        if self.verbose:
+            dt = time.time() - t0
+            print(f"File list calculation took {dt:.2f} seconds.")
+        
+        # Open zarr stores for each file
+        t0 = time.time()
+        for idx, row in self._files.iterrows():
+            zfile = Path(row['full_name'])
+            if zfile.exists() or self.online:
+                try:
+                    store = zarr.open(str(zfile), mode='r')
+                    self._files.at[idx, 'store'] = store
+                    # Initialize empty samples list
+                    self._files.at[idx, 'samples'] = []
+                except Exception as e:
+                    if self.verbose:
+                        print(f"Warning: Could not open {zfile}: {e}")
+        
+        if self.verbose:
+            dt = time.time() - t0
+            print(f"Zarr stores initialization took {dt:.2f} seconds.")
     
     def get_files(self) -> List[os.PathLike]:
         """
@@ -286,9 +393,11 @@ class SARZarrDataset(Dataset):
         Returns:
             List[os.PathLike]: List of file paths.
         """
-        return []
+        if self._files is None or len(self._files) == 0:
+            return []
+        return self._files['full_name'].tolist()
     
-    def get_samples_by_file(self, zfile: Union[str, os.PathLike]) -> List[Tuple[int, int]]:
+    def get_samples_by_file(self, zfile: Union[str, os.PathLike]) -> Union[List[Tuple[int, int]], LazyCoordinateGenerator]:
         """
         Get patch coordinates for a specific file.
         
@@ -296,20 +405,88 @@ class SARZarrDataset(Dataset):
             zfile (Union[str, os.PathLike]): Path to the Zarr file.
             
         Returns:
-            List[Tuple[int, int]]: List of (y, x) coordinates.
+            Union[List[Tuple[int, int]], LazyCoordinateGenerator]: Lazy coordinate generator or list of coordinates.
         """
-        return []
+        if self._files is None:
+            return []
+        
+        try:
+            samples = self._files.loc[self._files['full_name'] == Path(zfile), 'samples'].values
+            if len(samples) > 0:
+                return samples[0] if samples[0] is not None else []
+            return []
+        except Exception:
+            return []
     
     def calculate_patches_from_store(self, zfile: os.PathLike, patch_order: str = "row", window: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None):
         """
-        Calculate patch coordinates for a zarr store.
+        Calculate patch coordinates for a zarr store using lazy generation.
         
         Args:
             zfile (os.PathLike): Path to the Zarr file.
-            patch_order (str): Order of patch extraction.
-            window (Optional): Optional window for patch extraction.
+            patch_order (str): Order of patch extraction ("row", "col", or "chunk").
+            window (Optional): Optional window for patch extraction ((y_start, y_end), (x_start, x_end)).
         """
-        pass
+        zfile = Path(zfile)
+        
+        # Get the shape of the zarr array
+        try:
+            arr = self.get_store_at_level(zfile, self.level_from)
+            height, width = arr.shape[:2]
+        except Exception as e:
+            if self.verbose:
+                print(f"Warning: Could not get shape for {zfile}: {e}")
+            return
+        
+        # Get patch size
+        ph, pw = self.get_patch_size(zfile)
+        
+        # Calculate valid coordinate ranges with buffer and stride
+        if window is not None:
+            (y_start, y_end), (x_start, x_end) = window
+        else:
+            y_start = self.buffer[0]
+            y_end = height - self.buffer[0] - ph
+            x_start = self.buffer[1]
+            x_end = width - self.buffer[1] - pw
+        
+        # Create lazy coordinate ranges
+        y_range = LazyCoordinateRange(y_start, y_end, self.stride[0])
+        x_range = LazyCoordinateRange(x_start, x_end, self.stride[1])
+        
+        # Create lazy coordinate generator
+        lazy_coords = LazyCoordinateGenerator(
+            y_range=y_range,
+            x_range=x_range,
+            patch_order=patch_order,
+            block_pattern=self.block_pattern,
+            zfile=zfile,
+            dataset=self
+        )
+        
+        # Store in DataFrame
+        idx = self._files.index[self._files['full_name'] == zfile]
+        if len(idx) > 0:
+            self._files.at[idx[0], 'samples'] = lazy_coords
+            if self.verbose:
+                print(f"Generated {len(lazy_coords)} lazy coordinates for {zfile.name}")
+    
+    def __len__(self) -> int:
+        """
+        Get the total number of patches across all files.
+        
+        Returns:
+            int: Total number of patches.
+        """
+        if self._files is None:
+            return 0
+        
+        total = 0
+        for idx, row in self._files.iterrows():
+            samples = row['samples']
+            if samples is not None:
+                total += len(samples)
+        return total
 
     def __getitem__(self, idx: Tuple[str, int, int]) -> Tuple[torch.Tensor, torch.Tensor]:
 
