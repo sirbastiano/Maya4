@@ -34,15 +34,10 @@ jobs:
       run: |
         source venv/bin/activate
         python -m pip install --upgrade pip setuptools wheel
-        # Install core dependencies first
-        pip install numpy pandas
-        # Install PyTorch CPU-only version for CI (smaller, faster)
-        pip install torch --index-url https://download.pytorch.org/whl/cpu
-        # Install other required packages
-        pip install zarr huggingface-hub dask[array] tqdm matplotlib scikit-learn requests
-        pip install numcodecs shapely pyarrow phidown
-        # Install package with dev dependencies
-        pip install -e ".[dev]"
+        # Install package with all dependencies (dev + geospatial)
+        pip install -e ".[dev,geospatial]"
+        # Install PyTorch CPU-only version for CI (smaller, faster) - override the default
+        pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cpu
     
     - name: Verify installation
       run: |
@@ -53,7 +48,9 @@ jobs:
         python -c "import huggingface_hub; print(f'HuggingFace Hub version: {huggingface_hub.__version__}')"
         python -c "import pandas; print(f'Pandas version: {pandas.__version__}')"
         python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
-        pip list | grep -E "torch|zarr|numpy|pandas|huggingface"
+        python -c "import folium; print(f'Folium version: {folium.__version__}')"
+        python -c "import geopandas; print(f'GeoPandas version: {geopandas.__version__}')"
+        pip list
     
     - name: Create data directory
       run: |
