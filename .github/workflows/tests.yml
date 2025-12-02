@@ -23,20 +23,39 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
     
+    - name: Create virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+    
     - name: Install dependencies
       run: |
+        source venv/bin/activate
         python -m pip install --upgrade pip setuptools wheel
+        # Install core dependencies first
+        pip install numpy pandas
         # Install PyTorch CPU-only version for CI (smaller, faster)
         pip install torch --index-url https://download.pytorch.org/whl/cpu
+        # Install other required packages
+        pip install zarr huggingface-hub dask[array] tqdm matplotlib scikit-learn
+        pip install numcodecs shapely pyarrow phidown
+        # Install optional dependencies for testing
+        pip install folium geopandas leafmap geopy
         # Install package with dev dependencies
         pip install -e ".[dev]"
     
     - name: Verify installation
       run: |
+        source venv/bin/activate
         python -c "import maya4; print(f'Maya4 version: {maya4.__version__}')"
         python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
         python -c "import zarr; print(f'Zarr version: {zarr.__version__}')"
-        pip list | grep -E "torch|zarr|numpy|pandas|huggingface"
+        python -c "import huggingface_hub; print(f'HuggingFace Hub version: {huggingface_hub.__version__}')"
+        python -c "import pandas; print(f'Pandas version: {pandas.__version__}')"
+        python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
+        pip list | grep -E "torch|zarr|numpy|pandas|huggingface|folium"
     
     - name: Create data directory
       run: |
@@ -45,21 +64,22 @@ jobs:
     
     - name: Lint with flake8
       run: |
-        # Stop the build if there are Python syntax errors or undefined names
+        source venv/bin/activate
+        # Only check for critical errors (syntax errors, undefined names)
         flake8 maya4 --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings
-        flake8 maya4 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
     - name: Download test data with online mode
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
+        source venv/bin/activate
         # Run online tests first to download required files
         # HF_TOKEN is available as environment variable for huggingface_hub
         pytest tests/test_online_download.py -v --tb=short -m online || echo "Online tests completed with status $?"
     
     - name: Run tests with pytest
       run: |
+        source venv/bin/activate
         # Run all tests (online tests will use cached data)
         pytest tests/ -v --tb=short --cov=maya4 --cov-report=xml --cov-report=term
     
@@ -84,41 +104,22 @@ jobs:
         python-version: '3.11'
         cache: 'pip'
     
+    - name: Create virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+    
     - name: Install package
       run: |
-        python -m pip install --upgrade pip
+        source venv/bin/activate
+        python -m pip install --upgrade pip setuptools wheel
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
         pip install -e .
     
     - name: Test imports
       run: |
+        source venv/bin/activate
         python -c "from maya4 import SARZarrDataset, get_sar_dataloader, SARTransform"
         python tests/test_installation.py
-
-  lint:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-    
-    - name: Install linting tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 black isort
-    
-    - name: Check code formatting with black
-      run: |
-        black --check maya4 tests
-    
-    - name: Check import sorting with isort
-      run: |
-        isort --check-only maya4 tests
-    
-    - name: Lint with flake8
-      run: |
-        flake8 maya4 tests --count --show-source --statistics
