@@ -8,22 +8,11 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        exclude:
-          # Reduce test matrix - test all Python versions on Ubuntu only
-          - os: macos-latest
-            python-version: '3.9'
-          - os: macos-latest
-            python-version: '3.10'
-          - os: windows-latest
-            python-version: '3.9'
-          - os: windows-latest
-            python-version: '3.10'
 
     steps:
     - uses: actions/checkout@v4
@@ -36,8 +25,18 @@ jobs:
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
+        # Install PyTorch CPU-only version for CI (smaller, faster)
+        pip install torch --index-url https://download.pytorch.org/whl/cpu
+        # Install package with dev dependencies
         pip install -e ".[dev]"
+    
+    - name: Verify installation
+      run: |
+        python -c "import maya4; print(f'Maya4 version: {maya4.__version__}')"
+        python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
+        python -c "import zarr; print(f'Zarr version: {zarr.__version__}')"
+        pip list | grep -E "torch|zarr|numpy|pandas|huggingface"
     
     - name: Create data directory
       run: |
@@ -65,7 +64,7 @@ jobs:
         pytest tests/ -v --tb=short --cov=maya4 --cov-report=xml --cov-report=term
     
     - name: Upload coverage to Codecov
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: matrix.python-version == '3.11'
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml

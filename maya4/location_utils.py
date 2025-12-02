@@ -333,7 +333,7 @@ def get_location_for_zarr_file(zarr_path: str) -> Tuple[Optional[float], Optiona
     filename = Path(zarr_path).name
     
     # Use phidown to get location
-    location_info = _extract_location(filename)
+    location_info = extract_location_from_zarr_filename_with_phidown(filename)
     
     if location_info and location_info['success']:
         return location_info['latitude'], location_info['longitude']

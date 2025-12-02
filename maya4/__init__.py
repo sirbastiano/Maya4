@@ -178,6 +178,6 @@ __all__ = [
     'RC_MAX', 'RC_MIN', 'GT_MAX', 'GT_MIN'
 ]
 
-# Version info
-__version__ = "1.0.0"
-__author__ = "Gabriele Daga"
+# Version and author info (matches pyproject.toml)
+__version__ = '0.1.0'
+__author__ = 'Roberto Del Prete'
