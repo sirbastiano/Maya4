@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12']
 
     steps:
     - uses: actions/checkout@v4
@@ -41,8 +41,6 @@ jobs:
         # Install other required packages
         pip install zarr huggingface-hub dask[array] tqdm matplotlib scikit-learn requests
         pip install numcodecs shapely pyarrow phidown
-        # Install optional dependencies for testing
-        pip install folium geopandas leafmap geopy
         # Install package with dev dependencies
         pip install -e ".[dev]"
     
@@ -55,7 +53,7 @@ jobs:
         python -c "import huggingface_hub; print(f'HuggingFace Hub version: {huggingface_hub.__version__}')"
         python -c "import pandas; print(f'Pandas version: {pandas.__version__}')"
         python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
-        pip list | grep -E "torch|zarr|numpy|pandas|huggingface|folium"
+        pip list | grep -E "torch|zarr|numpy|pandas|huggingface"
     
     - name: Create data directory
       run: |
