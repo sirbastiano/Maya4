@@ -61,7 +61,7 @@ class TestDetailedDataIntegrity:
         if len(dataloader.dataset.get_files()) == 0:
             pytest.skip("No files found matching filter criteria")
         
-        file = str(dataloader.dataset._files["full_name"].iloc[0])
+        file = str(dataloader.dataset.get_files()[0])
         store = zarr.open(file, mode='r')
         
         # Test a patch at origin
@@ -172,7 +172,7 @@ class TestDetailedDataIntegrity:
         if len(dataloader.dataset.get_files()) == 0:
             pytest.skip("No files found matching filter criteria")
         
-        file = str(dataloader.dataset._files["full_name"].iloc[0])
+        file = str(dataloader.dataset.get_files()[0])
         store = zarr.open(file, mode='r')
         
         # Test a patch
@@ -296,7 +296,7 @@ class TestDetailedDataIntegrity:
         if len(dataloader.dataset.get_files()) == 0:
             pytest.skip("No files found matching filter criteria")
         
-        file = str(dataloader.dataset._files["full_name"].iloc[0])
+        file = str(dataloader.dataset.get_files()[0])
         store = zarr.open(file, mode='r')
         
         # Get patch with positional encoding

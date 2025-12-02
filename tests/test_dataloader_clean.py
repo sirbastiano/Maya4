@@ -399,7 +399,7 @@ class TestDataloaderAccuracy:
         if len(dataloader.dataset.get_files()) == 0:
             pytest.skip("No files found matching filter criteria")
         
-        file = str(dataloader.dataset._files["full_name"].iloc[0])
+        file = str(dataloader.dataset.get_files()[0])
         
         # Open the zarr store directly
         store = zarr.open(file, mode='r')
@@ -484,7 +484,7 @@ class TestDataloaderAccuracy:
         if len(dataloader.dataset.get_files()) == 0:
             pytest.skip("No files found matching filter criteria")
         
-        file = str(dataloader.dataset._files["full_name"].iloc[0])
+        file = str(dataloader.dataset.get_files()[0])
         
         # Open the zarr store directly
         store = zarr.open(file, mode='r')
@@ -569,7 +569,7 @@ class TestDataloaderAccuracy:
         if len(dataloader.dataset.get_files()) == 0:
             pytest.skip("No files found matching filter criteria")
         
-        file = str(dataloader.dataset._files["full_name"].iloc[0])
+        file = str(dataloader.dataset.get_files()[0])
         
         # Open the zarr store directly
         store = zarr.open(file, mode='r')
