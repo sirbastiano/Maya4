@@ -1,10 +1,15 @@
-import os
 import functools
+import os
+from pathlib import Path
+from typing import TYPE_CHECKING, Dict
+
 import numpy as np
-from typing import Dict, TYPE_CHECKING
+
+from maya4.api import fetch_chunk_from_hf_zarr
+from maya4.utils import get_chunk_name_from_coords, get_part_from_filename
 
 if TYPE_CHECKING:
-    from maya4.dataloader_clean import SARZarrDataset
+    from maya4.dataloader import SARZarrDataset
 
 class ChunkCache:
     """
@@ -12,16 +17,50 @@ class ChunkCache:
     Handles all chunk-level operations and caching logic.
     """
     
-    def __init__(self, dataset: 'SARZarrDataset', cache_size: int = 1000):
+    def __init__(self, dataset: 'SARZarrDataset', cache_size: int = 1000, online: bool = True, data_dir: str = './data', author: str = 'default_author', verbose: bool = False):
         self.dataset = dataset
         self.cache_size = cache_size
+        self.online = online
+        self.data_dir = data_dir
+        self.author = author
+        self.verbose = verbose
         self._patch: Dict[str, np.ndarray] = {}
         
         # Setup LRU cache for chunk loading
         self._load_chunk = functools.lru_cache(maxsize=cache_size)(
             self._load_chunk_uncached
         )
-    
+    def _download_sample_if_missing(self, zfile: os.PathLike, level: str, y: int, x: int) -> Path:
+        """
+        Download a zarr chunk if it's missing locally (for online mode).
+        
+        Args:
+            zfile (os.PathLike): Path to the Zarr file.
+            level (str): Processing level.
+            y (int): y-coordinate.
+            x (int): x-coordinate.
+            
+        Returns:
+            Path: Path to the chunk file.
+        """
+        # Get chunk coordinates
+        arr = self.dataset.get_store_at_level(zfile, level)
+        ch, cw = arr.chunks
+        cy, cx = y // ch, x // cw
+        
+        # Build chunk path
+        part = get_part_from_filename(zfile)
+        zfile_name = os.path.basename(zfile)
+        chunk_name = get_chunk_name_from_coords(cy, cx, zfile, level)
+        chunk_path = Path(self.data_dir) / part / zfile_name / level / chunk_name
+        
+        # Download if missing
+        if not chunk_path.exists():
+            repo_id = f"{self.author}/{part}"
+            if self.verbose:
+                print(f"Chunk {chunk_name} not found locally. Downloading from Hugging Face Zarr archive...")
+            fetch_chunk_from_hf_zarr(level=level, y=y, x=x, zarr_archive=zfile_name, local_dir=os.path.join(self.data_dir, part), repo_id=repo_id)
+        return chunk_path
     def _load_chunk_uncached(self, zfile: os.PathLike, level: str, cy: int, cx: int) -> np.ndarray:
         """
         Load a single chunk at chunk coordinates (cy, cx).
@@ -46,8 +85,8 @@ class ChunkCache:
         chunk_x_end = min(chunk_x_start + cw, arr.shape[1])
         
         # Ensure the chunk is downloaded if not already available
-        if self.dataset.online:
-            self.dataset._download_sample_if_missing(zfile, level, chunk_y_start, chunk_x_start)
+        if self.online:
+            self._download_sample_if_missing(zfile, level, chunk_y_start, chunk_x_start)
         
         # Load the actual chunk data
         chunk_data = arr[chunk_y_start:chunk_y_end, chunk_x_start:chunk_x_end]

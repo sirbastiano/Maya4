@@ -1,8 +1,8 @@
 """
 Tests for normalization modules.
 """
-import pytest
 import numpy as np
+import pytest
 
 
 class TestNormalizationModule:

@@ -1,9 +1,12 @@
+import functools
+from typing import Callable, Optional, Union
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-import functools
-from typing import Optional, Callable, Union
-from maya4.utils import minmax_normalize, minmax_inverse, RC_MIN, RC_MAX, GT_MIN, GT_MAX
+
+from maya4.utils import GT_MAX, GT_MIN, RC_MAX, RC_MIN, minmax_inverse, minmax_normalize
+
 
 class BaseTransformModule(nn.Module):
     """Base class for SAR data transformations."""

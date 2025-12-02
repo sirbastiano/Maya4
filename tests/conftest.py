@@ -1,12 +1,13 @@
 """
 Pytest configuration and shared fixtures for maya4 tests.
 """
-import pytest
-import numpy as np
-import zarr
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
+import numpy as np
+import pytest
+import zarr
 
 
 @pytest.fixture
@@ -78,7 +79,7 @@ def sample_filter():
 def sample_transform():
     """Create a sample transform for testing."""
     from maya4.normalization import SARTransform
-    from maya4.utils import RC_MIN, RC_MAX, GT_MIN, GT_MAX
+    from maya4.utils import GT_MAX, GT_MIN, RC_MAX, RC_MIN
     
     return SARTransform.create_minmax_normalized_transform(
         normalize=True,

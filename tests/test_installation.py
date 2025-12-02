@@ -8,47 +8,32 @@ def test_imports():
     
     try:
         # Test main components
-        from maya4 import (
-            SARZarrDataset,
-            KPatchSampler,
-            get_sar_dataloader,
-            SARDataloader,
-            SARTransform,
-            SampleFilter,
-        )
+        from maya4 import KPatchSampler, SampleFilter, SARDataloader, SARTransform, SARZarrDataset, get_sar_dataloader
         print('✓ Main dataloader components imported successfully')
         
         # Test normalization modules
-        from maya4 import (
-            NormalizationModule,
-            ComplexNormalizationModule,
-            IdentityModule,
-            BaseTransformModule,
-        )
+        from maya4 import BaseTransformModule, ComplexNormalizationModule, IdentityModule, NormalizationModule
         print('✓ Normalization modules imported successfully')
         
         # Test API utilities
-        from maya4 import (
-            list_base_files_in_repo,
-            fetch_chunk_from_hf_zarr,
-            download_metadata_from_product,
-        )
+        from maya4 import download_metadata_from_product, fetch_chunk_from_hf_zarr, list_base_files_in_repo
         print('✓ API utilities imported successfully')
         
         # Test utility functions
         from maya4 import (
+            GT_MAX,
+            GT_MIN,
+            RC_MAX,
+            RC_MIN,
             get_chunk_name_from_coords,
             get_sample_visualization,
-            minmax_normalize,
             minmax_inverse,
-            RC_MAX, RC_MIN, GT_MAX, GT_MIN,
+            minmax_normalize,
         )
         print('✓ Utility functions imported successfully')
         
         # Test location utilities
-        from maya4 import (
-            get_products_spatial_mapping,
-        )
+        from maya4 import get_products_spatial_mapping
         print('✓ Location utilities imported successfully')
         
         print('\\n✅ All imports successful!')
@@ -67,8 +52,8 @@ def test_basic_functionality():
     print('\\nTesting basic functionality...')
     
     try:
-        from maya4 import SARTransform, RC_MIN, RC_MAX, GT_MIN, GT_MAX
-        
+        from maya4 import GT_MAX, GT_MIN, RC_MAX, RC_MIN, SARTransform
+
         # Create a transform
         transforms = SARTransform.create_minmax_normalized_transform(
             normalize=True,

@@ -4,19 +4,20 @@ This module provides functions to filter files by modalities and download files 
 It includes functions to filter files based on specified modalities and to download specific files from a dataset repository on the Hugging Face Hub.
 """
 
+import hashlib
 import os
-from pathlib import Path
-from huggingface_hub import hf_hub_download, list_repo_tree
-from huggingface_hub.hf_api import RepoFile
-import huggingface_hub
-from multiprocessing import Pool
-from typing import List, Optional, Union
-import numpy as np
+import sys
 import threading
 import time
-import hashlib
 from contextlib import contextmanager
-import sys
+from multiprocessing import Pool
+from pathlib import Path
+from typing import List, Optional, Union
+
+import huggingface_hub
+import numpy as np
+from huggingface_hub import hf_hub_download, list_repo_tree
+from huggingface_hub.hf_api import RepoFile
 
 try:
     from tqdm import tqdm

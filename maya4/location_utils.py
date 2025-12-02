@@ -12,15 +12,17 @@ Author: SAR Processing Team
 Date: October 2025
 """
 
-from phidown.search import CopernicusDataSearcher
-import pandas as pd
-from pathlib import Path
-from typing import Dict, Optional, Tuple, List, Union
-import time
-from tqdm import tqdm
 import glob
 import os
+import time
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+import pandas as pd
+from phidown.search import CopernicusDataSearcher
+from tqdm import tqdm
+
 
 def create_valid_datetime_string(date_str: str) -> Optional[str]:
     """
@@ -198,7 +200,7 @@ def get_products_spatial_mapping(author: str, repos: List[str], data_dir: Union[
     all_products = []
 
     # try:
-    from maya4.api import list_repos_by_author, list_base_files_in_repo
+    from maya4.api import list_base_files_in_repo, list_repos_by_author
 
     if not overwrite_csv and output_csv_file_path is not None and os.path.exists(Path(output_csv_file_path)):
         df = pd.read_csv(Path(output_csv_file_path))
@@ -270,6 +272,7 @@ def get_products_spatial_mapping(author: str, repos: List[str], data_dir: Union[
     output_dir = Path(str(output_csv_file_path)).parent
     output_dir.mkdir(exist_ok=True)
     from datetime import datetime
+
     # Generate timestamp for unique filename
 
     try:

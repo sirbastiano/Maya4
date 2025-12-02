@@ -1,13 +1,15 @@
 import os
 import re
-import pandas as pd
-import matplotlib.pyplot as plt
-from typing import Union, Optional, Tuple
-from pathlib import Path
-import numpy as np
 from datetime import datetime
-from typing import List, Dict, Optional, Tuple, Union
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 from maya4.location_utils import get_products_spatial_mapping
+
 try:
     from create_balanced_dataset_splits import create_balanced_splits
 except ImportError:
@@ -39,8 +41,8 @@ def _ensure_dataloader_dependencies() -> None:
         return
 
     try:
-        from dataloader.normalization import SARTransform as _SARTransform  # type: ignore
         from dataloader.dataloader import get_sar_dataloader as _get_sar_dataloader  # type: ignore
+        from dataloader.normalization import SARTransform as _SARTransform  # type: ignore
     except ImportError as exc:  # pragma: no cover - defensive
         raise ImportError(
             "Unable to import dataloader helpers (SARTransform, get_sar_dataloader). "
@@ -197,8 +199,8 @@ def get_sample_visualization(
 
             
 def get_zarr_version(store_path: os.PathLike) -> int:
-    import os
     import json
+    import os
     if os.path.exists(store_path / 'zarr.json'):
         return 3
     elif os.path.exists(store_path / '.zgroup'):
@@ -207,7 +209,7 @@ def get_zarr_version(store_path: os.PathLike) -> int:
         raise ValueError("No .zgroup or zarr.json found")
 
 def get_chunk_name_from_coords(
-    y: int, x: int, zarr_file_name: str, level:str, chunks: Tuple[int, int] = (256, 256), version: int = 3
+    y: int, x: int, zarr_file_name: str, level:str, chunks: Tuple[int, int] = (4096, 4096), version: int = 3
 ) -> str:
     """
     Generate a chunk name from zarr archive and coordinates.
@@ -579,6 +581,7 @@ def _get_balanced_representation_samples(
         List[str]: List of balanced filenames with paths
     """
     import ast
+
     from shapely.geometry import Polygon
     
     if 'scene_type' not in df.columns:

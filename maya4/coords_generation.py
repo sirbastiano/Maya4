@@ -1,8 +1,8 @@
 import os
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Tuple
 
 if TYPE_CHECKING:
-    from maya4.dataloader_clean import SARZarrDataset
+    from maya4.dataloader import SARZarrDataset
 
 class LazyCoordinateRange:
     """
