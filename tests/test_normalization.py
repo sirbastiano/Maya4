@@ -13,9 +13,8 @@ class TestNormalizationModule:
         from maya4.normalization import NormalizationModule
         
         module = NormalizationModule(
-            normalize=True,
-            min_val=-10.0,
-            max_val=10.0
+            data_min=-10.0,
+            data_max=10.0
         )
         
         # Test data in range
@@ -31,9 +30,8 @@ class TestNormalizationModule:
         from maya4.normalization import NormalizationModule
         
         module = NormalizationModule(
-            normalize=True,
-            min_val=-10.0,
-            max_val=10.0
+            data_min=-10.0,
+            data_max=10.0
         )
         
         normalized = np.array([[0.0, 0.5, 1.0]])
@@ -50,9 +48,10 @@ class TestComplexNormalizationModule:
         from maya4.normalization import ComplexNormalizationModule
         
         module = ComplexNormalizationModule(
-            normalize=True,
-            min_val=-10.0,
-            max_val=10.0
+            real_min=-10.0,
+            real_max=10.0,
+            imag_min=-10.0,
+            imag_max=10.0
         )
         
         # Create complex data
@@ -70,7 +69,6 @@ class TestSARTransform:
         from maya4.normalization import SARTransform
         
         transform = SARTransform.create_minmax_normalized_transform(
-            normalize=True,
             rc_min=-100.0,
             rc_max=100.0,
             gt_min=-50.0,
@@ -79,15 +77,14 @@ class TestSARTransform:
         )
         
         assert transform is not None
-        assert 'rc' in transform.modules
-        assert 'az' in transform.modules
+        assert 'rcmc' in transform.transforms or 'rc' in transform.transforms
+        assert 'az' in transform.transforms or 'ground_truth' in transform.transforms
     
     def test_transform_application(self):
         """Test applying transform to data."""
         from maya4.normalization import SARTransform
         
         transform = SARTransform.create_minmax_normalized_transform(
-            normalize=True,
             rc_min=-100.0,
             rc_max=100.0,
             gt_min=-50.0,

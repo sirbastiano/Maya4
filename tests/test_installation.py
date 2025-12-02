@@ -1,6 +1,8 @@
 """
 Test script to verify maya4 package installation and imports.
 """
+import maya4
+
 
 def test_imports():
     """Test that all main components can be imported."""

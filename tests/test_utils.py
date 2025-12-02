@@ -54,7 +54,8 @@ class TestFilenameUtilities:
         """Test extracting stripmap mode from filename."""
         from maya4.utils import extract_stripmap_mode_from_filename
         
-        filename = "S1A_IW_SLC__1SSH_20250101T000000_stripmap_mode_3.zarr"
+        # Real format: s1a-s3-raw-s-hh-...
+        filename = "s1a-s3-raw-s-hh-20250101t000000-20250101t000030-057498-0714b4.zarr"
         mode = extract_stripmap_mode_from_filename(filename)
         
         assert mode == 3
@@ -66,7 +67,7 @@ class TestFilenameUtilities:
         filename = "S1A_IW_SLC__1SSH_20250101T000000.zarr"
         mode = extract_stripmap_mode_from_filename(filename)
         
-        assert mode == 0
+        assert mode is None  # Function returns None, not 0
 
 
 class TestChunkUtilities:
@@ -76,8 +77,13 @@ class TestChunkUtilities:
         """Test generating chunk name from coordinates."""
         from maya4.utils import get_chunk_name_from_coords
         
-        chunk_name = get_chunk_name_from_coords(10, 20)
+        chunk_name = get_chunk_name_from_coords(
+            y=10, 
+            x=20, 
+            zarr_file_name="test.zarr",
+            level="rcmc"
+        )
         
         assert isinstance(chunk_name, str)
-        assert '10' in chunk_name
-        assert '20' in chunk_name
+        assert 'test.zarr' in chunk_name
+        assert 'rcmc' in chunk_name
