@@ -58,7 +58,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: #1f2937;
             border-radius: 20px;
@@ -240,6 +240,7 @@
         }
         
         .section {
+            padding: 40px;
             display: none;
             animation: fadeIn 0.5s ease;
         }
@@ -550,6 +551,7 @@
         
         <nav>
             <button onclick="showSection('overview')" class="active">Overview</button>
+            <button onclick="showSection('installation')">Install</button>
             <button onclick="showSection('parameters')">Parameters</button>
             <button onclick="showSection('configurations')">Examples</button>
             <button onclick="showSection('processing-levels')">Processing Levels</button>
@@ -557,12 +559,12 @@
             <button onclick="showSection('generator')">Code Generator</button>
         </nav>
         
-        <div class="content">
             <!-- Overview Section -->
             <div id="overview" class="section active">
                 <h2><span class="emoji">🎯</span>Overview</h2>
-                <p> <strong>🌌 Maya4 📡</strong> is a project dedicated to curating and providing multi-level intermediate SAR representations from Sentinel-1 acquisitions, spanning the entire chain from Level 0 to Level 1.
-
+                <p> <strong>🌌 Maya4 📡</strong> is a project dedicated to curating and providing multi-level intermediate SAR representations from Sentinel-1 acquisitions, spanning the entire chain from Level 0 to Level 1.</p>
+                
+                <p>The name Maya4 draws inspiration from the Māyā veil in philosophy, where reality is hidden behind successive layers—just as radar echoes undergo transformations before forming a final SAR image.</p>
 The name Maya4 draws inspiration from the Māyā veil in philosophy, where reality is hidden behind successive layers—just as radar echoes undergo transformations before forming a final SAR image.</p>
                 
                 <h3>Key Features</h3>
@@ -587,6 +589,168 @@ The name Maya4 draws inspiration from the Māyā veil in philosophy, where reali
                 
                 <h3>Quick Start</h3>
                 <div class="code-block"><span class="keyword">from</span> maya4 <span class="keyword">import</span> get_sar_dataloader<br><br><span class="comment"># Create a basic dataloader</span><br>loader = <span class="function">get_sar_dataloader</span>(<br>    data_dir=<span class="string">'./data'</span>,<br>    level_from=<span class="string">'rcmc'</span>,<br>    level_to=<span class="string">'az'</span>,<br>    batch_size=<span class="number">16</span>,<br>    patch_size=(<span class="number">1000</span>, <span class="number">1000</span>),<br>    online=<span class="keyword">True</span><br>)<br><br><span class="comment"># Iterate through batches</span><br><span class="keyword">for</span> x_batch, y_batch <span class="keyword">in</span> loader:<br>    <span class="comment"># x_batch: input (rcmc)</span><br>    <span class="comment"># y_batch: target (az)</span><br>    <span class="keyword">pass</span></div>
+            </div>
+            
+            <!-- Installation Section -->
+            <div id="installation" class="section">
+                <h2><span class="emoji">📦</span>Installation</h2>
+                
+                <h3>Quick Install</h3>
+                <div class="info-box">
+                    <h4>🚀 Recommended: Install from PyPI</h4>
+                    <p>The easiest way to get started with Maya4 is through pip:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment"># Install from PyPI (recommended)</span><br>
+pip install maya4
+                </div>
+                
+                <h3>Alternative Installation Methods</h3>
+                
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>📦 Using PDM</h4>
+                        <p>For development with PDM package manager:</p>
+                        <div class="code-block" style="margin-top: 10px; font-size: 12px;">
+pdm install
+                        </div>
+                    </div>
+                    
+                    <div class="parameter-card">
+                        <h4>🔧 Development Mode</h4>
+                        <p>For local development and editable install:</p>
+                        <div class="code-block" style="margin-top: 10px; font-size: 12px;">
+pip install -e .
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Environment-Specific Installation</h3>
+                
+                <div class="config-example">
+                    <h4>📓 Jupyter Environment</h4>
+                    <p>Includes Jupyter notebook and lab dependencies for interactive development</p>
+                    <div class="code-block">
+pdm install -G jupyter_env
+                    </div>
+                </div>
+                
+                <div class="config-example">
+                    <h4>🗺️ Geospatial Features</h4>
+                    <p>Adds geographic processing tools and coordinate system support</p>
+                    <div class="code-block">
+pdm install -G geospatial
+                    </div>
+                </div>
+                
+                <div class="config-example">
+                    <h4>🛠️ Development Setup</h4>
+                    <p>Installs testing, linting, and development utilities</p>
+                    <div class="code-block">
+pdm install -G dev
+                    </div>
+                </div>
+                
+                <div class="config-example">
+                    <h4>🌟 Complete Installation</h4>
+                    <p>Installs all optional dependencies for full functionality</p>
+                    <div class="code-block">
+pdm install -G :all
+                    </div>
+                </div>
+                
+                <h3>Requirements</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Package</th>
+                            <th>Version</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Python</strong></td>
+                            <td>3.8+</td>
+                            <td>Core interpreter</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PyTorch</strong></td>
+                            <td>2.0+</td>
+                            <td>Deep learning framework</td>
+                        </tr>
+                        <tr>
+                            <td><strong>zarr</strong></td>
+                            <td>Latest</td>
+                            <td>Cloud-native array storage</td>
+                        </tr>
+                        <tr>
+                            <td><strong>huggingface_hub</strong></td>
+                            <td>Latest</td>
+                            <td>Dataset downloading</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CUDA</strong></td>
+                            <td>Optional</td>
+                            <td>GPU acceleration</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Verification</h3>
+                <div class="info-box">
+                    <h4>✅ Test Your Installation</h4>
+                    <p>After installation, verify that Maya4 is working correctly:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">import</span> maya4<br>
+<span class="keyword">from</span> maya4 <span class="keyword">import</span> get_sar_dataloader<br>
+<br>
+<span class="comment"># Print version</span><br>
+<span class="keyword">print</span>(<span class="string">f"Maya4 version: {maya4.__version__}"</span>)<br>
+<br>
+<span class="comment"># Test dataloader creation</span><br>
+loader = <span class="function">get_sar_dataloader</span>(<br>
+    data_dir=<span class="string">'./data'</span>,<br>
+    level_from=<span class="string">'rcmc'</span>,<br>
+    level_to=<span class="string">'az'</span>,<br>
+    max_products=<span class="number">1</span>,<br>
+    online=<span class="keyword">True</span>,<br>
+    verbose=<span class="keyword">True</span><br>
+)<br>
+<span class="keyword">print</span>(<span class="string">"✓ Installation successful!"</span>)
+                </div>
+                
+                <h3>Troubleshooting</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>🔒 HuggingFace Authentication</h4>
+                        <p>For private datasets, authenticate with HuggingFace:</p>
+                        <div class="code-block" style="margin-top: 10px; font-size: 12px;">
+huggingface-cli login
+                        </div>
+                    </div>
+                    
+                    <div class="parameter-card">
+                        <h4>💾 Disk Space</h4>
+                        <p>Each SAR product is ~20GB. Ensure adequate storage for your use case. Online mode downloads chunks on-demand.</p>
+                    </div>
+                    
+                    <div class="parameter-card">
+                        <h4>🐛 Issues?</h4>
+                        <p>Found a bug or need help? Open an issue on our <a href="https://github.com/sirbastiano/Maya4/issues" target="_blank">GitHub repository</a>.</p>
+                    </div>
+                    
+                    <div class="parameter-card">
+                        <h4>🆕 Updates</h4>
+                        <p>Keep Maya4 up to date:</p>
+                        <div class="code-block" style="margin-top: 10px; font-size: 12px;">
+pip install --upgrade maya4
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Parameters Section -->

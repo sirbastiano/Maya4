@@ -126,10 +126,13 @@ Maya4 provides curated Pre-Training (PT) datasets in cloud-native Zarr format:
 ### Quick Install
 
 ```bash
-# Using PDM (recommended)
+# From PyPI (recommended)
+pip install maya4
+
+# Using PDM
 pdm install
 
-# Using pip
+# Using pip (development)
 pip install -e .
 ```
 
