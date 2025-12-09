@@ -7,7 +7,6 @@ import numcodecs # Ensure numcodecs is installed for compression
 import pandas as pd
 import shutil
 import dask.array as da
-from .io import gc_collect
 
  
 

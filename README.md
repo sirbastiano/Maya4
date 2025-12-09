@@ -1,6 +1,6 @@
 <div align="center">
 
-![Maya4 Logo](./src/Maya4.png)
+<img src="./src/Maya4.png" alt="Maya4 Logo" width="1200" />
 
 
 ### Multi-Level SAR Processing & PyTorch DataLoader
@@ -43,6 +43,9 @@ The name **Maya4** draws inspiration from the *Māyā veil* in philosophy, where
 ---
 
 ## 🌐 Processing Levels
+
+<img src="./src/intermediates.jpg" alt="Maya4 Steps" width="1200" />
+
 
 Maya4 exposes the complete SAR processing chain through intermediate signal representations:
 

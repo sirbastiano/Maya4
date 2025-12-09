@@ -8,9 +8,9 @@ import numpy as np
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple, Union
 from maya4.location_utils import get_products_spatial_mapping
-from create_balanced_dataset_splits import create_balanced_splits
-import torch
-import zarr
+from maya4.splits import create_balanced_splits
+import torch # todo: remove if not needed
+import zarr # todo: remove if not needed
 
 LOCATIONS_CSV_FILENAME = 'sar_products_locations.csv'
 

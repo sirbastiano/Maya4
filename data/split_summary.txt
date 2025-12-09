@@ -1,0 +1,22 @@
+SAR Dataset Split Summary
+==================================================
+
+Total products processed: 963
+Geographic clusters: 20
+Sampling fraction: 0.90
+
+TRAIN SET: 605 products
+  Years: {2023: np.int64(207), 2024: np.int64(269), 2025: np.int64(129)}
+  Scene types: {'sea': np.int64(549), 'land': np.int64(46), 'coast': np.int64(10)}
+  Clusters: {'coast_2': np.int64(4), 'coast_3': np.int64(4), 'coast_4': np.int64(2), 'land_1': np.int64(4), 'land_10': np.int64(6), 'land_11': np.int64(2), 'land_12': np.int64(4), 'land_3': np.int64(4), 'land_4': np.int64(2), 'land_5': np.int64(2), 'land_7': np.int64(2), 'land_8': np.int64(18), 'land_9': np.int64(2), 'sea_10': np.int64(52), 'sea_11': np.int64(24), 'sea_12': np.int64(16), 'sea_14': np.int64(32), 'sea_15': np.int64(6), 'sea_16': np.int64(8), 'sea_17': np.int64(40), 'sea_18': np.int64(12), 'sea_19': np.int64(22), 'sea_2': np.int64(72), 'sea_3': np.int64(50), 'sea_5': np.int64(36), 'sea_6': np.int64(10), 'sea_7': np.int64(38), 'sea_8': np.int64(78), 'sea_9': np.int64(53)}
+
+VALIDATION SET: 152 products
+  Years: {2023: np.int64(58), 2024: np.int64(82), 2025: np.int64(12)}
+  Scene types: {'sea': np.int64(131), 'land': np.int64(12), 'coast': np.int64(9)}
+  Clusters: {'coast_0': np.int64(9), 'land_2': np.int64(10), 'land_6': np.int64(2), 'sea_0': np.int64(62), 'sea_4': np.int64(69)}
+
+TEST SET: 206 products
+  Years: {2023: np.int64(66), 2024: np.int64(110), 2025: np.int64(30)}
+  Scene types: {'sea': np.int64(189), 'land': np.int64(10), 'coast': np.int64(7)}
+  Clusters: {'coast_1': np.int64(7), 'land_0': np.int64(10), 'sea_1': np.int64(137), 'sea_13': np.int64(52)}
+
