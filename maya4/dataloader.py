@@ -479,39 +479,192 @@ class SARZarrDataset(Dataset):
                     self._files = self._files.iloc[:self._max_products]
         else:
             self._files = self._files.iloc[:self._max_products]
+        
+        # Pre-create directory structure for online mode
+        if self.online:
+            parts_to_create = set()
+            for _, row in self._files.iterrows():
+                part = get_part_from_filename(row['full_name'])
+                if part:
+                    parts_to_create.add(part)
+            
+            for part in parts_to_create:
+                part_dir = os.path.join(self.data_dir, part)
+                if not os.path.exists(part_dir):
+                    os.makedirs(part_dir, exist_ok=True)
+                    if self.verbose:
+                        print(f"Created directory: {part_dir}")
+        
         if self.verbose:
             print(f"Selected files: {len(self._files)} total")
             print(f"Files: {self._files['full_name'].tolist()}")
+            if self.online:
+                local_files = [f for f in self._files['full_name'] if Path(f).exists()]
+                print(f"Files already downloaded: {len(local_files)}/{len(self._files)}")
 
+    def _get_chunks_from_metadata(self, zfile: Union[str, os.PathLike], level: str) -> Tuple[int, int]:
+        """
+        Get chunk shape from Zarr metadata without opening the array.
+        Supports both Zarr v2 (.zarray) and v3 (zarr.json) formats.
+        
+        Args:
+            zfile (Union[str, os.PathLike]): Path to the Zarr file.
+            level (str): Processing level (e.g., 'rcmc', 'az').
+            
+        Returns:
+            Tuple[int, int]: Chunk shape (height, width).
+            
+        Raises:
+            RuntimeError: If metadata file doesn't exist or cannot be parsed.
+        """
+        zfile_path = Path(zfile)
+        level_path = zfile_path / level
+        
+        # Try Zarr v3 first (zarr.json)
+        metadata_v3_path = level_path / 'zarr.json'
+        # Try Zarr v2 (.zarray)
+        metadata_v2_path = level_path / '.zarray'
+        
+        if metadata_v3_path.exists():
+            # Zarr v3 format
+            try:
+                with open(metadata_v3_path, 'r') as f:
+                    metadata = json.load(f)
+                
+                # Zarr v3 format has chunk_grid.configuration.chunk_shape
+                chunk_shape = metadata['chunk_grid']['configuration']['chunk_shape']
+                return tuple(chunk_shape)
+            except (KeyError, json.JSONDecodeError) as e:
+                raise RuntimeError(
+                    f"Failed to parse chunk shape from Zarr v3 metadata {metadata_v3_path}. Error: {e}"
+                )
+        elif metadata_v2_path.exists():
+            # Zarr v2 format
+            try:
+                with open(metadata_v2_path, 'r') as f:
+                    metadata = json.load(f)
+                
+                # Zarr v2 format has chunks field directly
+                chunk_shape = metadata['chunks']
+                return tuple(chunk_shape)
+            except (KeyError, json.JSONDecodeError) as e:
+                raise RuntimeError(
+                    f"Failed to parse chunk shape from Zarr v2 metadata {metadata_v2_path}. Error: {e}"
+                )
+        else:
+            raise RuntimeError(
+                f"No Zarr metadata file found at {level_path}. "
+                f"Checked for both v3 (zarr.json) and v2 (.zarray). "
+                f"Download metadata first before accessing chunk information."
+            )
+    
+    def _validate_store_opened(self, zfile: Union[str, os.PathLike], store):
+        """
+        Validate that a store was successfully opened.
+        
+        Args:
+            zfile (os.PathLike): Path to the Zarr file.
+            store: The store object to validate.
+            
+        Raises:
+            RuntimeError: If store is None or invalid.
+        """
+        if store is None:
+            error_msg = f"Failed to open store for {zfile}. "
+            if self.online:
+                error_msg += "File may not exist in remote repository or download failed. "
+                error_msg += "Check HuggingFace credentials and network connection."
+            else:
+                error_msg += "File does not exist locally and online mode is disabled."
+            raise RuntimeError(error_msg)
+    
     def _append_file_to_stores(self, zfile: Union[str, os.PathLike]):
         """
         Appends a Zarr file to the stores dictionary, opening it in read-only mode.
         This method is used to initialize the dataset with a specific Zarr file.
+        For online mode with lazy loading, only ensures metadata exists but doesn't open store.
         
         Args:
             zfile (os.PathLike): Path to the Zarr file to be added.
+            
+        Raises:
+            RuntimeError: If file cannot be opened after download attempts.
         """
-        if not Path(zfile).exists():
-            return
-        # Only return if the entry does not exist at all
-        if not os.path.exists(get_part_from_filename(zfile)):
-            os.makedirs(os.path.join(self.data_dir, get_part_from_filename(zfile)), exist_ok=True)
+        # Check if store already opened
         idx = self._files.index[self._files['full_name'] == Path(zfile)]
         if len(idx) > 0 and self._files.at[idx[0], 'store'] is not None:
-            return  # Do not return, just continue
+            return  # Store already opened successfully
+        
+        # In online mode, we use lazy loading - don't open stores during initialization
+        # They will be opened on-demand when data is first accessed  
+        if self.online:
+            # Just ensure metadata is downloaded, but don't open the store yet
+            if not Path(zfile).exists():
+                zfile_name = os.path.basename(zfile)
+                part = get_part_from_filename(zfile)
+                repo_id = self.author + '/' + part
+                
+                if self.verbose:
+                    print(f"Downloading metadata for {zfile_name} from {repo_id}...")
+                
+                try:
+                    download_metadata_from_product(
+                        zfile_name=str(zfile_name),
+                        local_dir=os.path.join(self.data_dir, part),
+                        levels=[self.level_from, self.level_to],
+                        repo_id=repo_id,
+                        show_progress=self.verbose
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to download metadata for {zfile_name} from {repo_id}. "
+                        f"Error: {e}. Check HuggingFace credentials and network connection."
+                    )
+                
+                # Verify file exists after download
+                if not Path(zfile).exists():
+                    raise RuntimeError(
+                        f"File {zfile} still does not exist after metadata download. "
+                        f"The product may be incomplete or unavailable in repository {repo_id}."
+                    )
+            # In online mode, leave store as None - it will be opened lazily on first access
+            return
+        
+        # Offline mode: only open stores if file exists locally
+        if not Path(zfile).exists():
+            return  # File doesn't exist and we're offline
+        
+        # Ensure part directory exists
+        part = get_part_from_filename(zfile)
+        if part and not os.path.exists(os.path.join(self.data_dir, part)):
+            os.makedirs(os.path.join(self.data_dir, part), exist_ok=True)
+        
+        # Open the store (offline mode only)
         if self.backend == "zarr":
             idx = self._files.index[self._files['full_name'] == Path(zfile)]
             if len(idx) > 0:
-                #print(f"Opening Zarr store for file {zfile} at index {idx[0]}")
-                self._files.at[idx[0], 'store'] = self.open_archive(zfile)
+                try:
+                    self._files.at[idx[0], 'store'] = self.open_archive(zfile)
+                    if self.verbose:
+                        print(f"Successfully opened Zarr store for {zfile}")
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to open Zarr archive {zfile}. "
+                        f"Error: {e}. The file may be corrupted or incomplete."
+                    )
         elif self.backend == "dask":
-            self._files.loc[self._files['full_name'] == Path(zfile), 'store'] = {}
-            for level in (self.level_from, self.level_to):
-                complete_path = os.path.join(zfile, level) 
-                idx = self._files.index[self._files['full_name'] == Path(zfile)]
-                if len(idx) > 0:
-                    self._files.at[idx[0], 'store'] = {}
-                    self._files.at[idx[0], 'store'][level] = self.open_archive(complete_path) 
+            idx = self._files.index[self._files['full_name'] == Path(zfile)]
+            if len(idx) > 0:
+                self._files.at[idx[0], 'store'] = {}
+                for level in (self.level_from, self.level_to):
+                    complete_path = os.path.join(zfile, level)
+                    try:
+                        self._files.at[idx[0], 'store'][level] = self.open_archive(complete_path)
+                    except Exception as e:
+                        raise RuntimeError(
+                            f"Failed to open Dask array for {complete_path}. "
+                            f"Error: {e}. The file may be corrupted or incomplete."
+                        )
         else:
             raise ValueError(f"Unknown backend {self.backend}")
 
@@ -522,6 +675,10 @@ class SARZarrDataset(Dataset):
         For the "zarr" backend, opens each file as a Zarr store in read-only mode and stores it in `self._files` in the 'stores' attribute.
         For the "dask" backend, creates a dictionary for each file, loading data for each specified level using Dask arrays
         with the given patch size for rechunking.
+        
+        Note: In online mode, stores are opened lazily when first accessed, not during initialization.
+        This prevents errors when only metadata has been downloaded.
+        
         Raises:
             ValueError: If an unknown backend is specified.
         """
@@ -531,12 +688,18 @@ class SARZarrDataset(Dataset):
             dt = time.time() - t0
             print(f"Files list calculation took {dt:.2f} seconds.")
             
-        t0 = time.time()
-        for zfile in self.get_files():
-            self._append_file_to_stores(Path(zfile))
-        if self.verbose:
-            dt = time.time() - t0
-            print(f"Zarr stores initialization took {dt:.2f} seconds.")
+        # In online mode, defer store opening until first access
+        # This allows metadata-only downloads without errors
+        if not self.online:
+            t0 = time.time()
+            for zfile in self.get_files():
+                self._append_file_to_stores(Path(zfile))
+            if self.verbose:
+                dt = time.time() - t0
+                print(f"Zarr stores initialization took {dt:.2f} seconds.")
+        else:
+            if self.verbose:
+                print(f"Online mode: Stores will be opened lazily when first accessed.")
 
     def get_files(self) -> List[os.PathLike]:
         """
@@ -551,54 +714,206 @@ class SARZarrDataset(Dataset):
     def open_archive(self, zfile: os.PathLike) -> (zarr.Group | zarr.Array):
         """
         Open a Zarr archive and return the root group or array, depending on backend.
+        Validates that the Zarr store has actual data, not just metadata.
 
         Args:
             zfile (os.PathLike): Path to the Zarr file.
 
         Returns:
             zarr.Group or zarr.Array: The root group or array of the Zarr archive.
+            
+        Raises:
+            RuntimeError: If Zarr store is incomplete (metadata only, no chunks).
         """
         if self.backend == "dask":
             return da.from_zarr(zfile)
         elif self.backend == "zarr":
-            return zarr.open(zfile, mode='r')
+            try:
+                store = zarr.open(zfile, mode='r')
+                
+                # Validate that the store has actual data, not just metadata
+                # Check if it's a group with levels or an array
+                if isinstance(store, zarr.hierarchy.Group):
+                    # For a group, check if it has members
+                    if len(store.keys()) == 0:
+                        raise RuntimeError(
+                            f"Zarr store {zfile} is incomplete: metadata exists but no data arrays found. "
+                            f"Only metadata has been downloaded. Data chunks will be downloaded on-demand."
+                        )
+                return store
+            except KeyError as e:
+                # This happens when zarr.open finds metadata but no actual chunks
+                raise RuntimeError(
+                    f"Zarr store {zfile} is incomplete: {e}. "
+                    f"Only metadata has been downloaded. Data chunks need to be downloaded."
+                )
         else: 
             raise ValueError(f"Unknown backend {self.backend}")
         
     def get_store_at_level(self, zfile: Union[os.PathLike, str], level: str) -> zarr.Array:
+        """
+        Get the Zarr array at a specific level for a given file.
+        Downloads metadata if needed in online mode.
+        
+        Args:
+            zfile (Union[os.PathLike, str]): Path to the Zarr file.
+            level (str): Processing level to retrieve (e.g., 'rcmc', 'az').
+            
+        Returns:
+            zarr.Array: The Zarr array at the specified level.
+            
+        Raises:
+            ValueError: If level not found and offline mode.
+            RuntimeError: If store cannot be opened or level is missing.
+        """
         level_dir = Path(zfile) / level
-        if not Path(zfile).exists() or not level_dir.exists() or not level_dir.exists():
+        if not Path(zfile).exists() or not level_dir.exists():
             if self.online:
                 zfile_name = os.path.basename(zfile)
                 part = get_part_from_filename(zfile)
                 repo_id = self.author + '/' + part
-                download_metadata_from_product(
-                    zfile_name=str(zfile_name),
-                    local_dir=os.path.join(self.data_dir, part),
-                    levels=[level, self.level_from, self.level_to],
-                    repo_id=repo_id
-                )
+                
+                if self.verbose:
+                    print(f"Downloading metadata for level '{level}' from {zfile_name}...")
+                
+                try:
+                    download_metadata_from_product(
+                        zfile_name=str(zfile_name),
+                        local_dir=os.path.join(self.data_dir, part),
+                        levels=[level, self.level_from, self.level_to],
+                        repo_id=repo_id,
+                        show_progress=self.verbose
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to download metadata for level '{level}' in {zfile_name}. "
+                        f"Error: {e}. Check HuggingFace credentials and network connection."
+                    )
+                
+                # Verify level directory exists after download
+                if not level_dir.exists():
+                    raise RuntimeError(
+                        f"Level '{level}' still does not exist in {zfile} after metadata download. "
+                        f"The product may be incomplete or the level may not exist in repository {repo_id}."
+                    )
             else:
-                raise ValueError(f"Levels {self.level_from} and {self.level_to} not found in Zarr store {zfile}.")
+                raise ValueError(f"Level '{level}' not found in Zarr store {zfile} and online mode is disabled.")
+        
+        # In online mode, we don't keep stores open - open them on-demand
+        if self.online:
+            # Open the specific level array directly without storing it
+            level_path = Path(zfile) / level
+            try:
+                # First, try to open the array to check metadata
+                arr = zarr.open_array(str(level_path), mode='r')
+                return arr
+            except Exception as e:
+                # If opening fails, it might be because no chunks exist yet
+                # Download the first chunk (0,0) to initialize the array structure
+                if self.verbose:
+                    print(f"Array at {level_path} has no chunks yet. Downloading first chunk to initialize...")
+                
+                try:
+                    # Download first chunk at coordinate (0, 0) to bootstrap the array
+                    self._download_sample_if_missing(Path(zfile), level, 0, 0)
+                    
+                    # Now try opening again
+                    arr = zarr.open_array(str(level_path), mode='r')
+                    return arr
+                except Exception as download_err:
+                    raise RuntimeError(
+                        f"Failed to open Zarr array at {level_path}. "
+                        f"Initial error: {e}. "
+                        f"Download error: {download_err}. "
+                        f"The level may be incomplete or corrupted."
+                    )
+        
+        # Offline mode: use pre-opened stores
         self._append_file_to_stores(zfile=Path(zfile))
-        return self._files.loc[self._files['full_name'] == Path(zfile), 'store'].values[0][level]
+        
+        # Validate and return store at level
+        try:
+            store_entry = self._files.loc[self._files['full_name'] == Path(zfile), 'store'].values[0]
+            self._validate_store_opened(zfile, store_entry)
+            
+            if level not in store_entry:
+                raise RuntimeError(
+                    f"Level '{level}' not found in opened store for {zfile}. "
+                    f"Available levels: {list(store_entry.keys()) if isinstance(store_entry, dict) else 'N/A'}"
+                )
+            
+            return store_entry[level]
+        except IndexError:
+            raise RuntimeError(f"No store entry found for {zfile} in dataset files.")
     
     def get_store(self, zfile: Union[os.PathLike, str]) -> zarr.Group:
+        """
+        Get the Zarr store (root group) for a given file.
+        Downloads metadata if needed in online mode.
+        
+        Args:
+            zfile (Union[os.PathLike, str]): Path to the Zarr file.
+            
+        Returns:
+            zarr.Group: The root Zarr group.
+            
+        Raises:
+            ValueError: If file not found and offline mode.
+            RuntimeError: If store cannot be opened.
+        """
         if not Path(zfile).exists():
             if self.online:
                 zfile_name = os.path.basename(zfile)
                 part = get_part_from_filename(zfile)
                 repo_id = self.author + '/' + part
-                download_metadata_from_product(
-                    zfile_name=str(zfile_name),
-                    local_dir=os.path.join(self.data_dir, part),
-                    levels=[self.level_from, self.level_to], 
-                    repo_id=repo_id
-                )
+                
+                if self.verbose:
+                    print(f"Downloading metadata for {zfile_name} from {repo_id}...")
+                
+                try:
+                    download_metadata_from_product(
+                        zfile_name=str(zfile_name),
+                        local_dir=os.path.join(self.data_dir, part),
+                        levels=[self.level_from, self.level_to],
+                        repo_id=repo_id,
+                        show_progress=self.verbose
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to download metadata for {zfile_name} from {repo_id}. "
+                        f"Error: {e}. Check HuggingFace credentials and network connection."
+                    )
+                
+                # Verify file exists after download
+                if not Path(zfile).exists():
+                    raise RuntimeError(
+                        f"File {zfile} still does not exist after metadata download. "
+                        f"The product may be incomplete or unavailable in repository {repo_id}."
+                    )
             else:
-                raise ValueError(f"Levels {self.level_from} and {self.level_to} not found in Zarr store {zfile}.")
+                raise ValueError(f"File {zfile} not found and online mode is disabled.")
+        
+        # In online mode, we don't keep stores open - open them on-demand
+        if self.online:
+            # Open the group directly without storing it
+            try:
+                return zarr.open_group(str(zfile), mode='r')
+            except Exception as e:
+                raise RuntimeError(
+                    f"Failed to open Zarr group at {zfile}. "
+                    f"Error: {e}. The file may be incomplete or corrupted."
+                )
+        
+        # Offline mode: use pre-opened stores
         self._append_file_to_stores(zfile=Path(zfile))
-        return self._files.loc[self._files['full_name'] == str(zfile), 'store'].values[0]
+        
+        # Validate and return store
+        try:
+            store = self._files.loc[self._files['full_name'] == Path(zfile), 'store'].values[0]
+            self._validate_store_opened(zfile, store)
+            return store
+        except IndexError:
+            raise RuntimeError(f"No store entry found for {zfile} in dataset files.")
     def get_max_base_sample_size(self, zfile: Union[str, os.PathLike]):
         ph, pw =   self._max_base_sample_size
         if ph == -1:
@@ -627,22 +942,58 @@ class SARZarrDataset(Dataset):
         Args:
             zfile (os.PathLike): Path to the Zarr file.
             patch_order (str): Ordering strategy for patch coordinates. Options are "row", "col", or "chunk".
+            window (Optional[Tuple[Tuple[int, int], Tuple[int, int]]]): Optional window to restrict patch calculation.
+            
+        Raises:
+            RuntimeError: If metadata download fails or files are incomplete.
+            ValueError: If required levels not found and offline mode.
         """
         level_from_dir = Path(zfile) / self.level_from
-        level_t_dir = Path(zfile) / self.level_to
-        if not Path(zfile).exists() or not level_from_dir.exists() or not level_t_dir.exists():
+        level_to_dir = Path(zfile) / self.level_to
+        
+        if not Path(zfile).exists() or not level_from_dir.exists() or not level_to_dir.exists():
             if self.online:
                 zfile_name = os.path.basename(zfile)
                 part = get_part_from_filename(zfile)
                 repo_id = self.author + '/' + part
-                download_metadata_from_product(
-                    zfile_name=str(zfile_name),
-                    local_dir=os.path.join(self.data_dir, part),
-                    levels=[self.level_from, self.level_to], 
-                    repo_id=repo_id
-                )
+                
+                if self.verbose:
+                    print(f"Downloading metadata for {zfile_name} (levels: {self.level_from}, {self.level_to})...")
+                
+                try:
+                    download_metadata_from_product(
+                        zfile_name=str(zfile_name),
+                        local_dir=os.path.join(self.data_dir, part),
+                        levels=[self.level_from, self.level_to],
+                        repo_id=repo_id,
+                        show_progress=self.verbose
+                    )
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to download metadata for {zfile_name} from {repo_id}. "
+                        f"Error: {e}. Check HuggingFace credentials and network connection."
+                    )
+                
+                # Verify both levels exist after download
+                missing_levels = []
+                if not Path(zfile).exists():
+                    missing_levels.append('root')
+                if not level_from_dir.exists():
+                    missing_levels.append(self.level_from)
+                if not level_to_dir.exists():
+                    missing_levels.append(self.level_to)
+                
+                if missing_levels:
+                    raise RuntimeError(
+                        f"Missing levels {missing_levels} in {zfile} after metadata download. "
+                        f"The product may be incomplete or unavailable in repository {repo_id}. "
+                        f"Try downloading the full product manually or check repository contents."
+                    )
             else:
-                raise ValueError(f"Levels {self.level_from} and {self.level_to} not found in Zarr store {zfile}.")
+                raise ValueError(
+                    f"Levels {self.level_from} and {self.level_to} not found in Zarr store {zfile}. "
+                    f"Enable online mode to download from HuggingFace."
+                )
         
         self._append_file_to_stores(Path(zfile))
 
@@ -912,7 +1263,9 @@ class SARZarrDataset(Dataset):
             else:
                 raise FileNotFoundError(f"Zarr file {zfile} does not exist.")
 
-        chunk_name = get_chunk_name_from_coords(y, x, zarr_file_name=zfile_name, level=level, chunks=self.get_store_at_level(zfile, level).chunks, version=get_zarr_version(zfile))
+        # Get chunk shape from metadata without opening the array (avoids circular dependency)
+        chunks = self._get_chunks_from_metadata(zfile, level)
+        chunk_name = get_chunk_name_from_coords(y, x, zarr_file_name=zfile_name, level=level, chunks=chunks, version=get_zarr_version(zfile))
         chunk_path = self.data_dir / part / chunk_name
         
         if not chunk_path.exists():

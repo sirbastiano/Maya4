@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maya4 Interactive Guide - SAR Dataloader Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(270deg, #667eea, #764ba2, #f093fb, #a855f7, #7c3aed);
+            background-size: 1000% 1000%;
+            animation: gradientShift 30s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(167, 139, 250, 0.15) 0%, transparent 30%);
+            animation: floatParticles 40s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes floatParticles {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: shimmer 20s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .authors-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .authors-section h3 {
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+        }
+        
+        .authors-list {
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: white;
+        }
+        
+        .affiliation {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+        }
+        
+        .esa-philab {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .phi-symbol {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-buttons a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .header-buttons a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header-buttons a.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .header-buttons a.disabled:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .header-buttons svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        nav {
+            background: #f7fafc;
+            padding: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        nav button {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #7c3aed;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #7c3aed;
+            font-weight: 600;
+        }
+        
+        nav button:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+        
+        nav button.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h2 {
+            color: #2d3748;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid;
+            border-image: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%) 1;
+            padding-bottom: 10px;
+        }
+        
+        h3 {
+            color: #4a5568;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .parameter-card {
+            background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%);
+            border: 2px solid transparent;
+            border-image: linear-gradient(135deg, #a855f7, #ec4899) 1;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .parameter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #7c3aed, #a855f7, #ec4899);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .parameter-card:hover::before {
+            transform: translateX(0);
+        }
+        
+        .parameter-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+            border-color: #a855f7;
+        }
+        
+        .parameter-card h4 {
+            color: #7c3aed;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .parameter-card .type {
+            display: inline-block;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+        }
+        
+        .parameter-card p {
+            color: #4a5568;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .parameter-card p strong {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .code-block .keyword { color: #f97316; }
+        .code-block .string { color: #10b981; }
+        .code-block .comment { color: #94a3b8; }
+        .code-block .function { color: #3b82f6; }
+        .code-block .number { color: #a78bfa; }
+        
+        .config-example {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .config-example h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+        }
+        
+        .config-example p {
+            color: #78350f;
+            margin-bottom: 10px;
+        }
+        
+        .interactive-demo {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .interactive-demo h4 {
+            color: #065f46;
+            margin-bottom: 15px;
+        }
+        
+        .interactive-demo select,
+        .interactive-demo input {
+            padding: 10px;
+            margin: 5px 0;
+            border: 2px solid #10b981;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+        
+        .interactive-demo button {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .interactive-demo button:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+        
+        .output-box {
+            background: #1e293b;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-family: monospace;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #1e3a8a;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f7fafc;
+        }
+        
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+        }
+        
+        footer a {
+            color: #a855f7;
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Maya4 Interactive Guide</h1>
+            <p>Multi-Level SAR Processing & PyTorch DataLoader Documentation</p>
+            <div class="header-buttons">
+                <a href="https://github.com/sirbastiano/Maya4" target="_blank">
+                    <svg viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    GitHub
+                </a>
+                <a href="https://huggingface.co/Maya4" target="_blank">
+                    <svg viewBox="0 0 95 88" fill="currentColor">
+                        <path d="M47.21,0C31.48,0,18.76,12.72,18.76,28.44c0,7.72,3.07,14.73,8.05,19.87L47.21,88l20.4-39.69c4.98-5.14,8.05-12.15,8.05-19.87C75.66,12.72,62.94,0,47.21,0z M47.21,39.79c-6.25,0-11.35-5.09-11.35-11.35s5.09-11.35,11.35-11.35s11.35,5.09,11.35,11.35S53.46,39.79,47.21,39.79z"/>
+                    </svg>
+                    HuggingFace
+                </a>
+                <a href="#" class="disabled" title="ArXiv paper coming soon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    ArXiv (Coming Soon)
+                </a>
+            </div>
+            <div class="authors-section">
+                <h3>Authors</h3>
+                <div class="authors-list">Roberto Del Prete, Gabriele Daga, Nicolas Longépé</div>
+                <div class="affiliation">
+                    <span class="esa-philab">ESA <span class="phi-symbol">Φ</span>-lab</span>, European Space Research Institute (ESRIN), Frascati, Italy
+                </div>
+            </div>
+        </header>
+        
+        <nav>
+            <button onclick="showSection('overview')" class="active">Overview</button>
+            <button onclick="showSection('parameters')">Parameters</button>
+            <button onclick="showSection('configurations')">Configurations</button>
+            <button onclick="showSection('processing-levels')">Processing Levels</button>
+            <button onclick="showSection('sampling')">Sampling Strategies</button>
+            <button onclick="showSection('generator')">Code Generator</button>
+        </nav>
+        
+        <div class="content">
+            <!-- Overview Section -->
+            <div id="overview" class="section active">
+                <h2><span class="emoji">🎯</span>Overview</h2>
+                <p>Maya4 is a production-ready Python package for curating and providing <strong>multi-level intermediate SAR representations</strong> from Sentinel-1 acquisitions, spanning the entire processing chain from Level 0 (raw) to Level 1 (focused imagery).</p>
+                
+                <h3>Key Features</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>🎚️ Multi-Level Access</h4>
+                        <p>Complete processing chain from raw echoes to focused imagery (raw → rc → rcmc → az)</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>🚀 Performance</h4>
+                        <p>Zarr-based storage with intelligent chunk caching and lazy loading</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>☁️ Cloud-Native</h4>
+                        <p>Native HuggingFace Hub integration with 68TB+ of curated data</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>📊 ML-Ready</h4>
+                        <p>PyTorch-compatible dataloaders optimized for pre-training workflows</p>
+                    </div>
+                </div>
+                
+                <h3>Quick Start</h3>
+                <div class="code-block"><span class="keyword">from</span> maya4 <span class="keyword">import</span> get_sar_dataloader<br><br><span class="comment"># Create a basic dataloader</span><br>loader = <span class="function">get_sar_dataloader</span>(<br>    data_dir=<span class="string">'./data'</span>,<br>    level_from=<span class="string">'rcmc'</span>,<br>    level_to=<span class="string">'az'</span>,<br>    batch_size=<span class="number">16</span>,<br>    patch_size=(<span class="number">1000</span>, <span class="number">1000</span>),<br>    online=<span class="keyword">True</span><br>)<br><br><span class="comment"># Iterate through batches</span><br><span class="keyword">for</span> x_batch, y_batch <span class="keyword">in</span> loader:<br>    <span class="comment"># x_batch: input (rcmc)</span><br>    <span class="comment"># y_batch: target (az)</span><br>    <span class="keyword">pass</span></div>
+            </div>
+            
+            <!-- Parameters Section -->
+            <div id="parameters" class="section">
+                <h2><span class="emoji">⚙️</span>Parameters Reference</h2>
+                
+                <h3>Data Source Configuration</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>data_dir</h4>
+                        <span class="type">str</span>
+                        <p>Local directory for storing/loading SAR products.<br>Products are organized as: data_dir/[part]/[product_name].zarr/.<br>This is where Maya4 will look for local Zarr files or download new products when online mode is enabled.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>online</h4>
+                        <span class="type">bool</span>
+                        <p>Enable automatic downloading from HuggingFace Hub.<br><strong>True</strong>: downloads missing products from Maya4 HF organization (requires HF authentication for private datasets)<br><strong>False</strong>: only uses locally available products.<br>In online mode, only required chunks are downloaded on-demand (lazy loading), metadata downloaded first.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>max_products</h4>
+                        <span class="type">int | None</span>
+                        <p>Maximum number of SAR products to load. Useful for testing or limiting dataset size.<br>Set to <strong>None</strong> to load all available products matching filters.<br>Start with 1 for prototyping, then scale up.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>filters</h4>
+                        <span class="type">SampleFilter</span>
+                        <p>Metadata-based filtering by year, polarization, stripmap mode, and geographic location.<br><strong>years</strong>: [2023, 2024] for acquisition years<br><strong>polarizations</strong>: ["hh", "hv", "vh", "vv"] where H=horizontal, V=vertical<br><strong>stripmap_modes</strong>: [1,2,3] for narrow swaths/higher resolution, [4,5,6] for wider swaths<br><strong>parts</strong>: ["PT1", "PT2", etc.] for geographic regions.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>file_pattern</h4>
+                        <span class="type">str | None</span>
+                        <p>Regex pattern to match specific filenames (optional).<br>Example: ".*20230508.*" to load only products from May 8, 2023.<br>Leave as None to include all files matching other filters.</p>
+                    </div>
+                </div>
+                
+                <h3>Processing Levels</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>level_from</h4>
+                        <span class="type">str</span>
+                        <p>Input processing level: "raw" (L0), "rc", "rcmc", or "az" (L1). This is X in your training pair.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>level_to</h4>
+                        <span class="type">str</span>
+                        <p>Target processing level: "raw", "rc", "rcmc", or "az". This is Y in your training pair.</p>
+                    </div>
+                </div>
+                
+                <h3>Patch Extraction</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>patch_mode</h4>
+                        <span class="type">str</span>
+                        <p>How to extract patches from the full SAR image. <strong>"rectangular"</strong>: Extract rectangular patches (most common). Other modes may be added in future versions.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>patch_size</h4>
+                        <span class="type">tuple(int, int)</span>
+                        <p>(height, width) of extracted patches in pixels.<br><strong>(H, W)</strong>: fixed size<br><strong>(H, -1)</strong>: full width, fixed height (entire rows)<br><strong>(-1, W)</strong>: full height, fixed width (entire columns)<br><strong>(-1, -1)</strong>: entire image (not recommended)<br>Example: (1, 1000) extracts 1×1000 horizontal slices.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>stride</h4>
+                        <span class="type">tuple(int, int)</span>
+                        <p>(vertical, horizontal) step size between patches.<br><strong>stride &lt; patch_size</strong>: overlapping patches<br><strong>stride = patch_size</strong>: non-overlapping tiles<br><strong>stride &gt; patch_size</strong>: skip regions<br>Example: (1000, 1000) with patch_size (1000, 1000) = no overlap.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>buffer</h4>
+                        <span class="type">tuple(int, int)</span>
+                        <p>(vertical, horizontal) buffer zones at image boundaries.<br>Excludes this many pixels from edges to avoid boundary artifacts.<br>Example: (1000, 1000) excludes 1000 pixels from each edge.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>patch_order</h4>
+                        <span class="type">str</span>
+                        <p>Order in which patches are extracted.<br><strong>"row"</strong>: left→right, top→bottom (horizontal raster)<br><strong>"col"</strong>: top→bottom, left→right (vertical raster)<br><strong>"chunk"</strong>: follows Zarr storage chunks (I/O efficient, typically fastest).</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>max_base_sample_size</h4>
+                        <span class="type">tuple(int, int) | None</span>
+                        <p>(height, width) maximum size for base samples.<br>When concatenate_patches=True, limits the size of concatenated blocks.<br>Helps manage memory usage. Set to None for no limit.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>block_pattern</h4>
+                        <span class="type">tuple(int, int) | None</span>
+                        <p>(vertical_blocks, horizontal_blocks) for block sampling.<br>Divides each product into a grid and samples within blocks, ensuring representative coverage.<br>Example: (32, -1) = 32 vertical blocks. Set to None for standard extraction.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>shuffle_files</h4>
+                        <span class="type">bool</span>
+                        <p>Shuffle the order of SAR products.<br><strong>True</strong>: random product order each epoch (recommended for training)<br><strong>False</strong>: deterministic order (useful for reproducibility).</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>use_balanced_sampling</h4>
+                        <span class="type">bool</span>
+                        <p>Balance samples across geographic locations using K-means clustering on lat/lon.<br>Requires sklearn and ~10+ products.<br><strong>True</strong>: equal representation from different areas<br><strong>False</strong>: no geographic balancing.</p>
+                    </div>
+                </div>
+                
+                <h3>Data Representation</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>complex_valued</h4>
+                        <span class="type">bool</span>
+                        <p>Return data as complex numbers or separate real/imag channels.<br><strong>True</strong>: Complex64 tensors (native SAR representation, single channel)<br><strong>False</strong>: Float32 tensors with separate channels (shape changes from (B, H, W) to (B, 2, H, W)).</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>positional_encoding</h4>
+                        <span class="type">bool</span>
+                        <p>Add spatial position information to samples.<br>Appends normalized (row, col) coordinates as additional channels.<br>Useful for transformer models and spatial-aware architectures.<br><strong>True</strong>: adds 2 channels<br><strong>False</strong>: only SAR data.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>concatenate_patches</h4>
+                        <span class="type">bool</span>
+                        <p>Stack multiple patches into larger samples for sequence learning.<br><strong>True</strong>: concatenate patches along specified axis<br><strong>False</strong>: return individual patches.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>concat_axis</h4>
+                        <span class="type">int</span>
+                        <p>Axis along which to concatenate patches. Only used when concatenate_patches=True.<br><strong>0</strong>: vertical concatenation (stack vertically)<br><strong>1</strong>: horizontal concatenation (stack horizontally).</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>transform</h4>
+                        <span class="type">SARTransform</span>
+                        <p>Transformation pipeline defining normalization for each processing level.<br>SARTransform can specify: <strong>transform_raw</strong> (Level 0), <strong>transform_rc</strong> (Range Compressed), <strong>transform_rcmc</strong> (RCMC), <strong>transform_az</strong> (focused).<br>Use minmax_normalize, z-score, robust, or custom functions. Set to None to disable normalization.</p>
+                    </div>
+                </div>
+                
+                <h3>DataLoader Configuration</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>batch_size</h4>
+                        <span class="type">int</span>
+                        <p>Number of samples per batch. Standard PyTorch DataLoader parameter.<br>Typical values: 8-32 for large patches, 64-128 for small patches.<br>Adjust based on GPU memory.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>num_workers</h4>
+                        <span class="type">int</span>
+                        <p>Number of parallel workers for data loading.<br><strong>0</strong>: load in main process (good for debugging)<br><strong>&gt;0</strong>: use multiprocessing (faster but harder to debug)<br>Recommended: 2-4 for most use cases.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>samples_per_prod</h4>
+                        <span class="type">int</span>
+                        <p>Number of patches to extract per SAR product.<br>Controls how many samples each product contributes per epoch.<br>Higher values = more thorough coverage but longer epochs.<br>Typical: 100-1000.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>cache_size</h4>
+                        <span class="type">int</span>
+                        <p>Number of products to keep in memory cache.<br>Larger cache = fewer disk reads but more RAM usage.<br>Recommended: 10-100 depending on available RAM.<br>Uses LRU caching at chunk level for optimal performance.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>backend</h4>
+                        <span class="type">str</span>
+                        <p>Storage format for SAR products.<br><strong>"zarr"</strong>: Zarr format (default, supports cloud streaming).<br>Zarr provides scalable, chunked storage with lazy loading capabilities.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>verbose</h4>
+                        <span class="type">bool</span>
+                        <p>Print detailed information during initialization and loading.<br><strong>True</strong>: show download progress, cache info, debugging messages<br><strong>False</strong>: minimal output (recommended for training).</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>save_samples</h4>
+                        <span class="type">bool</span>
+                        <p>Save extracted patches to disk for inspection.<br>Useful for debugging and visualizing what the model sees.<br><strong>True</strong>: save patches as image files<br><strong>False</strong>: no saving (recommended for training).</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurations Section -->
+            <div id="configurations" class="section">
+                <h2><span class="emoji">📋</span>Configuration Examples</h2>
+                
+                <div class="config-example">
+                    <h4>🎯 Fast Prototyping</h4>
+                    <p>Quick testing with a single product</p>
+                    <div class="code-block">
+loader = <span class="function">get_sar_dataloader</span>(
+    data_dir=<span class="string">'./data'</span>,
+    level_from=<span class="string">'rcmc'</span>,
+    level_to=<span class="string">'az'</span>,
+    batch_size=<span class="number">4</span>,
+    patch_size=(<span class="number">1000</span>, <span class="number">1000</span>),
+    max_products=<span class="number">1</span>,
+    online=<span class="keyword">True</span>,
+    verbose=<span class="keyword">True</span>
+)
+                    </div>
+                </div>
+                
+                <div class="config-example">
+                    <h4>🚀 Full Training</h4>
+                    <p>Production-ready multi-product training</p>
+                    <div class="code-block">
+loader = <span class="function">get_sar_dataloader</span>(
+    data_dir=<span class="string">'./data'</span>,
+    level_from=<span class="string">'rcmc'</span>,
+    level_to=<span class="string">'az'</span>,
+    batch_size=<span class="number">32</span>,
+    num_workers=<span class="number">4</span>,
+    patch_size=(<span class="number">1000</span>, <span class="number">1000</span>),
+    stride=(<span class="number">500</span>, <span class="number">500</span>),
+    shuffle_files=<span class="keyword">True</span>,
+    samples_per_prod=<span class="number">1000</span>,
+    cache_size=<span class="number">50</span>,
+    online=<span class="keyword">True</span>
+)
+                    </div>
+                </div>
+                
+                <div class="config-example">
+                    <h4>🔬 Vertical Slice Analysis</h4>
+                    <p>Range direction analysis with horizontal slices</p>
+                    <div class="code-block">
+loader = <span class="function">get_sar_dataloader</span>(
+    data_dir=<span class="string">'./data'</span>,
+    level_from=<span class="string">'rcmc'</span>,
+    level_to=<span class="string">'az'</span>,
+    patch_size=(<span class="number">1</span>, <span class="number">-1</span>),  <span class="comment"># Full width</span>
+    patch_order=<span class="string">'row'</span>,
+    complex_valued=<span class="keyword">True</span>
+)
+                    </div>
+                </div>
+                
+                <div class="config-example">
+                    <h4>🎓 Sequence Learning</h4>
+                    <p>Transformer-ready with positional encoding</p>
+                    <div class="code-block">
+loader = <span class="function">get_sar_dataloader</span>(
+    data_dir=<span class="string">'./data'</span>,
+    level_from=<span class="string">'rcmc'</span>,
+    level_to=<span class="string">'az'</span>,
+    patch_size=(<span class="number">100</span>, <span class="number">1</span>),
+    patch_order=<span class="string">'col'</span>,
+    complex_valued=<span class="keyword">False</span>,
+    positional_encoding=<span class="keyword">True</span>,
+    concatenate_patches=<span class="keyword">True</span>,
+    concat_axis=<span class="number">0</span>
+)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Processing Levels Section -->
+            <div id="processing-levels" class="section">
+                <h2><span class="emoji">🎚️</span>Processing Levels</h2>
+                
+                <div class="info-box">
+                    <h4>SAR Processing Pipeline</h4>
+                    <p>Maya4 exposes the complete SAR processing chain through intermediate signal representations. Each level represents a step in transforming raw radar echoes into focused SAR imagery.</p>
+                </div>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Level Pair</th>
+                            <th>Task</th>
+                            <th>Description</th>
+                            <th>Complexity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>raw → rc</strong></td>
+                            <td>Range Compression</td>
+                            <td>Learn how radar echoes are compressed in range direction</td>
+                            <td>Low - 1D processing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>rc → rcmc</strong></td>
+                            <td>Range Cell Migration Correction</td>
+                            <td>Learn to correct for target motion during acquisition</td>
+                            <td>Medium - Geometric correction</td>
+                        </tr>
+                        <tr>
+                            <td><strong>rcmc → az</strong></td>
+                            <td>Azimuth Compression (Focusing)</td>
+                            <td>Learn final focusing step to create SAR image</td>
+                            <td>High - 2D focusing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>raw → rcmc</strong></td>
+                            <td>Combined RC + RCMC</td>
+                            <td>Multi-stage processing in one step</td>
+                            <td>Medium-High - Combined operations</td>
+                        </tr>
+                        <tr>
+                            <td><strong>raw → az</strong></td>
+                            <td>End-to-End SAR Processing</td>
+                            <td>Complete processing chain from echoes to image</td>
+                            <td>Very High - Full focusing pipeline</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Level Characteristics</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>🔴 raw (Level 0)</h4>
+                        <p>Raw radar echoes as received by the satellite. Unprocessed time-domain signal with range and azimuth dimensions.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>🟡 rc (Range Compressed)</h4>
+                        <p>After pulse compression in range direction. Improves range resolution by correlating with transmitted chirp.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>🟠 rcmc (Range Cell Migration Corrected)</h4>
+                        <p>Corrected for range cell migration caused by platform motion. Straightens signal trajectory.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>🟢 az (Azimuth Focused)</h4>
+                        <p>Fully focused SAR image after azimuth compression. This is the final Level 1 product.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sampling Strategies Section -->
+            <div id="sampling" class="section">
+                <h2><span class="emoji">🎲</span>Sampling Strategies</h2>
+                
+                <h3>Patch Order Comparison</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Description</th>
+                            <th>Use Case</th>
+                            <th>I/O Efficiency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>row</strong></td>
+                            <td>Left→right, top→bottom (horizontal raster scan)</td>
+                            <td>Sequential horizontal features, coherent spatial ordering</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>col</strong></td>
+                            <td>Top→bottom, left→right (vertical raster scan)</td>
+                            <td>Range direction analysis, vertical features</td>
+                            <td>Medium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>chunk</strong></td>
+                            <td>Follows Zarr storage chunks</td>
+                            <td>Maximum I/O performance, minimizes cache misses</td>
+                            <td>High ⚡</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>Block Pattern Sampling</h3>
+                <div class="info-box">
+                    <h4>Stratified Coverage</h4>
+                    <p>Block pattern divides each product into a grid of blocks and samples within each block. This ensures representative sampling across the entire SAR product, capturing diverse spatial characteristics.</p>
+                </div>
+                
+                <div class="code-block">
+loader = <span class="function">get_sar_dataloader</span>(
+    ...,
+    block_pattern=(<span class="number">32</span>, <span class="number">32</span>),  <span class="comment"># 32×32 grid of blocks</span>
+    patch_order=<span class="string">'row'</span>        <span class="comment"># Within each block</span>
+)
+                </div>
+                
+                <h3>Advanced Features</h3>
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>Patch Concatenation</h4>
+                        <p>Stack multiple patches into larger samples for sequence learning. Specify axis: 0 (vertical) or 1 (horizontal).</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>Balanced Sampling</h4>
+                        <p>Use K-means clustering on lat/lon to ensure geographic diversity. Requires sklearn and ~10+ products.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>Lazy Loading</h4>
+                        <p>In online mode, only required chunks are downloaded on-demand. Metadata downloaded first, data chunks as needed.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Code Generator Section -->
+            <div id="generator" class="section">
+                <h2><span class="emoji">🤖</span>Interactive Code Generator</h2>
+                
+                <div class="interactive-demo">
+                    <h4>Configure Your DataLoader</h4>
+                    
+                    <label>Processing Level (Input):</label>
+                    <select id="level-from">
+                        <option value="raw">raw (Level 0 - Raw echoes)</option>
+                        <option value="rc">rc (Range Compressed)</option>
+                        <option value="rcmc" selected>rcmc (Range Cell Migration Corrected)</option>
+                        <option value="az">az (Azimuth Focused - Level 1)</option>
+                    </select>
+                    
+                    <label>Processing Level (Target):</label>
+                    <select id="level-to">
+                        <option value="raw">raw (Level 0 - Raw echoes)</option>
+                        <option value="rc">rc (Range Compressed)</option>
+                        <option value="rcmc">rcmc (Range Cell Migration Corrected)</option>
+                        <option value="az" selected>az (Azimuth Focused - Level 1)</option>
+                    </select>
+                    
+                    <label>Use Case:</label>
+                    <select id="use-case">
+                        <option value="prototype">Fast Prototyping (1 product, debugging)</option>
+                        <option value="training">Full Training (multi-product, optimized)</option>
+                        <option value="vertical">Vertical Slice Analysis (range direction)</option>
+                        <option value="horizontal">Horizontal Slice Analysis (azimuth direction)</option>
+                        <option value="sequence">Sequence Learning (transformer-ready)</option>
+                    </select>
+                    
+                    <label>Batch Size:</label>
+                    <input type="number" id="batch-size" value="16" min="1" max="128">
+                    
+                    <label>Max Products:</label>
+                    <input type="number" id="max-products" value="5" min="1" max="1000">
+                    
+                    <label>Online Mode:</label>
+                    <select id="online-mode">
+                        <option value="True" selected>True (auto-download from HuggingFace)</option>
+                        <option value="False">False (local files only)</option>
+                    </select>
+                    
+                    <button onclick="generateCode()">Generate Code 🚀</button>
+                    
+                    <div class="output-box" id="generated-code">Click "Generate Code" to see your custom configuration...</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>
+                <strong>Maya4</strong> - Multi-Level SAR Processing & PyTorch DataLoader<br>
+                <a href="https://github.com/sirbastiano/Maya4" target="_blank">GitHub</a> | 
+                <a href="https://huggingface.co/Maya4" target="_blank">HuggingFace</a><br>
+                License: Apache-2.0
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('nav button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        function generateCode() {
+            const levelFrom = document.getElementById('level-from').value;
+            const levelTo = document.getElementById('level-to').value;
+            const useCase = document.getElementById('use-case').value;
+            const batchSize = document.getElementById('batch-size').value;
+            const maxProducts = document.getElementById('max-products').value;
+            const onlineMode = document.getElementById('online-mode').value;
+            
+            let code = `from maya4 import get_sar_dataloader\n\n`;
+            code += `# Configuration: ${getUseCaseName(useCase)}\n`;
+            code += `# Processing: ${levelFrom} → ${levelTo}\n\n`;
+            code += `loader = get_sar_dataloader(\n`;
+            code += `    data_dir='./data',\n`;
+            code += `    level_from='${levelFrom}',\n`;
+            code += `    level_to='${levelTo}',\n`;
+            code += `    batch_size=${batchSize},\n`;
+            
+            // Use case specific parameters
+            switch(useCase) {
+                case 'prototype':
+                    code += `    num_workers=0,              # Single process for debugging\n`;
+                    code += `    patch_size=(1000, 1000),\n`;
+                    code += `    stride=(1000, 1000),\n`;
+                    code += `    patch_order='chunk',\n`;
+                    code += `    verbose=True,              # Show debug information\n`;
+                    break;
+                case 'training':
+                    code += `    num_workers=4,             # Parallel loading\n`;
+                    code += `    patch_size=(1000, 1000),\n`;
+                    code += `    stride=(500, 500),         # 50% overlap\n`;
+                    code += `    patch_order='chunk',\n`;
+                    code += `    shuffle_files=True,\n`;
+                    code += `    samples_per_prod=1000,\n`;
+                    code += `    cache_size=50,\n`;
+                    break;
+                case 'vertical':
+                    code += `    num_workers=0,\n`;
+                    code += `    patch_size=(1, -1),        # Full width slices\n`;
+                    code += `    patch_order='row',\n`;
+                    code += `    complex_valued=True,\n`;
+                    break;
+                case 'horizontal':
+                    code += `    num_workers=0,\n`;
+                    code += `    patch_size=(-1, 1),        # Full height slices\n`;
+                    code += `    patch_order='col',\n`;
+                    code += `    complex_valued=True,\n`;
+                    break;
+                case 'sequence':
+                    code += `    num_workers=0,\n`;
+                    code += `    patch_size=(100, 1),\n`;
+                    code += `    patch_order='col',\n`;
+                    code += `    complex_valued=False,      # Real/imag channels\n`;
+                    code += `    positional_encoding=True,  # Add spatial info\n`;
+                    code += `    concatenate_patches=True,\n`;
+                    code += `    concat_axis=0,\n`;
+                    break;
+            }
+            
+            code += `    max_products=${maxProducts},\n`;
+            code += `    online=${onlineMode}\n`;
+            code += `)\n\n`;
+            code += `# Iterate through batches\n`;
+            code += `for x_batch, y_batch in loader:\n`;
+            code += `    # x_batch: input (${levelFrom})\n`;
+            code += `    # y_batch: target (${levelTo})\n`;
+            code += `    pass  # Your training code here\n`;
+            
+            document.getElementById('generated-code').textContent = code;
+        }
+        
+        function getUseCaseName(useCase) {
+            const names = {
+                'prototype': 'Fast Prototyping',
+                'training': 'Full Training',
+                'vertical': 'Vertical Slice Analysis',
+                'horizontal': 'Horizontal Slice Analysis',
+                'sequence': 'Sequence Learning'
+            };
+            return names[useCase] || useCase;
+        }
+    </script>
+</body>
+</html>

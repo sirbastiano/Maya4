@@ -300,6 +300,8 @@ def download_file_from_hf(repo_id: str, filename: str, local_dir: Union[str, os.
             if show_progress:
                 print(f'\\033[31m\\u2717 Failed to download {os.path.basename(filename)}: {e}\\033[0m')
             raise
+        
+
 def list_base_files_in_repo(repo_id: str, path_in_repo: str= "", relative_path: bool=False) -> list:
     """
     Efficiently list file names in the base directory of a Hugging Face dataset repository.
@@ -322,6 +324,8 @@ def list_base_files_in_repo(repo_id: str, path_in_repo: str= "", relative_path: 
     if relative_path:
         names = [os.path.basename(name) for name in names]
     return names
+
+
 def list_repos_by_author(author: str) -> list:
     """
     List all dataset repositories by a specific author on Hugging Face Hub.
@@ -337,6 +341,8 @@ def list_repos_by_author(author: str) -> list:
     repos = api.list_datasets(author=author)
     repo_names = [repo.id for repo in repos]
     return repo_names
+
+
 def list_files_in_repo(repo_id: str, path_in_repo: str, filters: list) -> list:
     """
     List all files in a Hugging Face Hub repository.
@@ -567,7 +573,6 @@ def download_metadata_from_product(
         )
     
     return meta_file_path
-
 
 def fetch_chunk_from_hf_zarr(
     level: str, 
