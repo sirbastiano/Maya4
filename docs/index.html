@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maya4 Interactive Guide - SAR Dataloader Documentation</title>
+    <title>Maya4 Project - Documentation</title>
     <style>
         * {
             margin: 0;
@@ -14,10 +14,10 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(270deg, #667eea, #764ba2, #f093fb, #a855f7, #7c3aed);
-            background-size: 1000% 1000%;
-            animation: gradientShift 30s ease infinite;
+            color: #e5e7eb;
+            background: linear-gradient(45deg, #1e3a8a, #1e40af, #0f766e, #15803d, #3b82f6, #065f46, #1d4ed8, #0d9488);
+            background-size: 400% 400%;
+            animation: gradientShift 45s ease infinite;
             min-height: 100vh;
             padding: 20px;
             position: relative;
@@ -26,7 +26,9 @@
         
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
             100% { background-position: 0% 50%; }
         }
         
@@ -38,33 +40,36 @@
             width: 200%;
             height: 200%;
             background-image: 
-                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(167, 139, 250, 0.15) 0%, transparent 30%);
-            animation: floatParticles 40s ease-in-out infinite;
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(13, 148, 136, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(34, 197, 94, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 60% 60%, rgba(251, 191, 36, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 10% 90%, rgba(29, 78, 216, 0.15) 0%, transparent 35%);
+            animation: floatParticles 60s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
         }
         
         @keyframes floatParticles {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(30px, -30px) rotate(120deg); }
-            66% { transform: translate(-20px, 20px) rotate(240deg); }
+            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            25% { transform: translate(50px, -40px) rotate(90deg) scale(1.1); }
+            50% { transform: translate(30px, 30px) rotate(180deg) scale(0.9); }
+            75% { transform: translate(-40px, 20px) rotate(270deg) scale(1.05); }
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: #1f2937;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             overflow: hidden;
             position: relative;
             z-index: 1;
         }
         
         header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e40af 30%, #0d9488 60%, #047857 100%);
             color: white;
             padding: 40px;
             text-align: center;
@@ -79,14 +84,14 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: shimmer 20s linear infinite;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 2px, transparent 2px);
+            background-size: 40px 40px;
+            animation: shimmer 30s linear infinite;
         }
         
         @keyframes shimmer {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(40px, 40px) rotate(360deg); }
         }
         
         header h1 {
@@ -106,8 +111,8 @@
         }
         
         .authors-section {
-            margin-top: 25px;
-            padding-top: 20px;
+            margin-top: 15px;
+            padding-top: 10px;
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             z-index: 1;
@@ -116,14 +121,14 @@
         .authors-section h3 {
             font-size: 0.9em;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 4px;
             margin-bottom: 10px;
             color: rgba(255, 255, 255, 0.7);
-            font-weight: 600;
+            font-weight: 500;
         }
         
         .authors-list {
-            font-size: 1em;
+            font-size: 1.2em;
             margin-bottom: 8px;
             color: white;
         }
@@ -196,9 +201,9 @@
         }
         
         nav {
-            background: #f7fafc;
+            background: #111827;
             padding: 20px;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid #0d9488;
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
@@ -207,30 +212,31 @@
         
         nav button {
             padding: 10px 20px;
-            background: white;
-            border: 2px solid #7c3aed;
+            background: #1f2937;
+            border: 2px solid #0d9488;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s ease;
-            color: #7c3aed;
+            color: #5eead4;
             font-weight: 600;
         }
         
         nav button:hover {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #3b82f6 100%);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.5);
         }
         
         nav button.active {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #3b82f6 100%);
             color: white;
         }
         
         .content {
             padding: 40px;
+            background: #1f2937;
         }
         
         .section {
@@ -248,16 +254,16 @@
         }
         
         h2 {
-            color: #2d3748;
+            color: #f3f4f6;
             font-size: 2em;
             margin-bottom: 20px;
             border-bottom: 3px solid;
-            border-image: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%) 1;
+            border-image: linear-gradient(90deg, #0d9488 0%, #3b82f6 100%) 1;
             padding-bottom: 10px;
         }
         
         h3 {
-            color: #4a5568;
+            color: #d1d5db;
             font-size: 1.5em;
             margin-top: 30px;
             margin-bottom: 15px;
@@ -271,14 +277,14 @@
         }
         
         .parameter-card {
-            background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%);
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
             border: 2px solid transparent;
-            border-image: linear-gradient(135deg, #a855f7, #ec4899) 1;
+            border-image: linear-gradient(135deg, #0d9488, #3b82f6) 1;
             padding: 16px;
             border-radius: 12px;
             transition: all 0.3s ease;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
             position: relative;
             overflow: hidden;
         }
@@ -290,7 +296,7 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, #7c3aed, #a855f7, #ec4899);
+            background: linear-gradient(90deg, #0d9488, #3b82f6, #fbbf24);
             transform: translateX(-100%);
             transition: transform 0.3s ease;
         }
@@ -301,12 +307,12 @@
         
         .parameter-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
-            border-color: #a855f7;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
         }
         
         .parameter-card h4 {
-            color: #7c3aed;
+            color: #5eead4;
             font-size: 1.1em;
             margin-bottom: 8px;
             font-weight: 700;
@@ -317,7 +323,7 @@
         
         .parameter-card .type {
             display: inline-block;
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #3b82f6 100%);
             color: white;
             padding: 3px 10px;
             border-radius: 6px;
@@ -325,17 +331,17 @@
             margin-bottom: 8px;
             font-weight: 600;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+            box-shadow: 0 2px 4px rgba(13, 148, 136, 0.3);
         }
         
         .parameter-card p {
-            color: #4a5568;
+            color: #d1d5db;
             line-height: 1.5;
             font-size: 0.95em;
         }
         
         .parameter-card p strong {
-            color: #7c3aed;
+            color: #5eead4;
             font-weight: 600;
         }
         
@@ -359,33 +365,33 @@
         .code-block .number { color: #a78bfa; }
         
         .config-example {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-left: 4px solid #f59e0b;
+            background: linear-gradient(135deg, #1e3a8a 0%, #0f766e 100%);
+            border-left: 4px solid #3b82f6;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
         }
         
         .config-example h4 {
-            color: #92400e;
+            color: #93c5fd;
             margin-bottom: 10px;
         }
         
         .config-example p {
-            color: #78350f;
+            color: #d1d5db;
             margin-bottom: 10px;
         }
         
         .interactive-demo {
-            background: #f0fdf4;
-            border: 2px solid #10b981;
+            background: #374151;
+            border: 2px solid #0d9488;
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
         }
         
         .interactive-demo h4 {
-            color: #065f46;
+            color: #5eead4;
             margin-bottom: 15px;
         }
         
@@ -393,14 +399,16 @@
         .interactive-demo input {
             padding: 10px;
             margin: 5px 0;
-            border: 2px solid #10b981;
+            border: 2px solid #0d9488;
             border-radius: 4px;
             font-size: 14px;
             width: 100%;
+            background: #1f2937;
+            color: #e5e7eb;
         }
         
         .interactive-demo button {
-            background: #10b981;
+            background: linear-gradient(135deg, #0d9488 0%, #3b82f6 100%);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -412,7 +420,7 @@
         }
         
         .interactive-demo button:hover {
-            background: #059669;
+            background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
             transform: scale(1.05);
         }
         
@@ -428,20 +436,20 @@
         }
         
         .info-box {
-            background: #dbeafe;
-            border-left: 4px solid #3b82f6;
+            background: #1e3a8a;
+            border-left: 4px solid #60a5fa;
             padding: 15px;
             margin: 20px 0;
             border-radius: 4px;
         }
         
         .info-box h4 {
-            color: #1e40af;
+            color: #93c5fd;
             margin-bottom: 10px;
         }
         
         .info-box p {
-            color: #1e3a8a;
+            color: #d1d5db;
         }
         
         .comparison-table {
@@ -455,17 +463,19 @@
         .comparison-table td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #374151;
+            background: #1f2937;
+            color: #d1d5db;
         }
         
         .comparison-table th {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            background: linear-gradient(135deg, #0d9488 0%, #3b82f6 100%);
             color: white;
             font-weight: 600;
         }
         
         .comparison-table tr:hover {
-            background: #f7fafc;
+            background: #374151;
         }
         
         footer {
@@ -477,7 +487,7 @@
         }
         
         footer a {
-            color: #a855f7;
+            color: #5eead4;
             text-decoration: none;
         }
         
@@ -489,13 +499,32 @@
             font-size: 1.2em;
             margin-right: 5px;
         }
+        
+        .phi-lab-logo {
+            height: 95px;
+            margin: -15px -20px;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+            transition: transform 0.3s ease;
+        }
+        
+        .phi-lab-logo:hover {
+            transform: scale(1.15);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Maya4 Interactive Guide</h1>
-            <p>Multi-Level SAR Processing & PyTorch DataLoader Documentation</p>
+            <img src="../src/philogo.png" alt="ESA Phi-lab Logo" class="phi-lab-logo" align="right">
+            <h1 style="text-align: left;">🌌 Maya4 - Multi-Level SAR Dataset 📡</h1>
+            <div class="authors-section">
+                <h3>Made with Love By</h3>
+                <div class="authors-list">Roberto Del Prete, Gabriele Daga, Nicolas Longépé</div>
+                <div class="affiliation">
+                    <span class="esa-philab">ESA <span class="phi-symbol">Φ</span>-lab</span>, European Space Research Institute (ESRIN), Frascati, Italy
+                </div>
+            </div>
+            
             <div class="header-buttons">
                 <a href="https://github.com/sirbastiano/Maya4" target="_blank">
                     <svg viewBox="0 0 16 16" fill="currentColor">
@@ -516,19 +545,13 @@
                     ArXiv (Coming Soon)
                 </a>
             </div>
-            <div class="authors-section">
-                <h3>Authors</h3>
-                <div class="authors-list">Roberto Del Prete, Gabriele Daga, Nicolas Longépé</div>
-                <div class="affiliation">
-                    <span class="esa-philab">ESA <span class="phi-symbol">Φ</span>-lab</span>, European Space Research Institute (ESRIN), Frascati, Italy
-                </div>
-            </div>
+
         </header>
         
         <nav>
             <button onclick="showSection('overview')" class="active">Overview</button>
             <button onclick="showSection('parameters')">Parameters</button>
-            <button onclick="showSection('configurations')">Configurations</button>
+            <button onclick="showSection('configurations')">Examples</button>
             <button onclick="showSection('processing-levels')">Processing Levels</button>
             <button onclick="showSection('sampling')">Sampling Strategies</button>
             <button onclick="showSection('generator')">Code Generator</button>
@@ -538,7 +561,9 @@
             <!-- Overview Section -->
             <div id="overview" class="section active">
                 <h2><span class="emoji">🎯</span>Overview</h2>
-                <p>Maya4 is a production-ready Python package for curating and providing <strong>multi-level intermediate SAR representations</strong> from Sentinel-1 acquisitions, spanning the entire processing chain from Level 0 (raw) to Level 1 (focused imagery).</p>
+                <p> <strong>🌌 Maya4 📡</strong> is a project dedicated to curating and providing multi-level intermediate SAR representations from Sentinel-1 acquisitions, spanning the entire chain from Level 0 to Level 1.
+
+The name Maya4 draws inspiration from the Māyā veil in philosophy, where reality is hidden behind successive layers—just as radar echoes undergo transformations before forming a final SAR image.</p>
                 
                 <h3>Key Features</h3>
                 <div class="parameter-grid">
@@ -772,7 +797,7 @@ loader = <span class="function">get_sar_dataloader</span>(
                 
                 <div class="config-example">
                     <h4>🔬 Vertical Slice Analysis</h4>
-                    <p>Range direction analysis with horizontal slices</p>
+                    <p>Azimuth direction analysis with vertical slices</p>
                     <div class="code-block">
 loader = <span class="function">get_sar_dataloader</span>(
     data_dir=<span class="string">'./data'</span>,
@@ -879,7 +904,164 @@ loader = <span class="function">get_sar_dataloader</span>(
             
             <!-- Sampling Strategies Section -->
             <div id="sampling" class="section">
-                <h2><span class="emoji">🎲</span>Sampling Strategies</h2>
+                <h2><span class="emoji">🎲</span>Sampling Strategies & Data Processing</h2>
+                
+                <h3>🔍 Data Filtering with SampleFilter</h3>
+                <div class="info-box">
+                    <h4>Selective Product Loading</h4>
+                    <p>The <code>SampleFilter</code> class allows you to precisely select which SAR products to include in your dataset based on acquisition metadata.<br><br>
+                    This is essential for creating focused datasets that match your research requirements.</p>
+                </div>
+                
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>📅 Year Filter</h4>
+                        <p><strong>Parameter:</strong> <code>years=[2023, 2024]</code></p>
+                        <p>Select products by acquisition year.<br><br>
+                        Useful for temporal analysis, studying seasonal changes, or ensuring temporal consistency in training data.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>📡 Polarization Filter</h4>
+                        <p><strong>Parameter:</strong> <code>polarizations=["hh", "vv"]</code></p>
+                        <p>Options: <code>"hh"</code>, <code>"hv"</code>, <code>"vh"</code>, <code>"vv"</code><br>
+                        • <strong>HH</strong>: Horizontal transmit/receive (co-pol)<br>
+                        • <strong>VV</strong>: Vertical transmit/receive (co-pol)<br>
+                        • <strong>HV/VH</strong>: Cross-polarization (depolarization)</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>📶 Stripmap Mode Filter</h4>
+                        <p><strong>Parameter:</strong> <code>stripmap_modes=[1, 2, 3]</code></p>
+                        <p>Sentinel-1 beam modes (1-6):<br>
+                        • <strong>Modes 1-3</strong>: Narrow swaths, higher resolution<br>
+                        • <strong>Modes 4-6</strong>: Wide swaths, lower resolution</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>🗺️ Geographic Parts Filter</h4>
+                        <p><strong>Parameter:</strong> <code>parts=["PT1", "PT2"]</code></p>
+                        <p>Maya4 organizes products into geographic partitions (PT1, PT2, PT3, PT4).<br><br>
+                        Filter by region to focus on specific areas of interest or ensure geographic diversity.</p>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">from</span> maya4 <span class="keyword">import</span> SampleFilter<br>
+<br>
+<span class="comment"># Create a filter for HH polarization data from 2023-2024</span><br>
+<span class="comment"># in high-resolution modes from the PT1 region</span><br>
+filters = <span class="function">SampleFilter</span>(<br>
+    years=[<span class="number">2023</span>, <span class="number">2024</span>],           <span class="comment"># Only recent acquisitions</span><br>
+    polarizations=[<span class="string">"hh"</span>],            <span class="comment"># Co-polarized horizontal</span><br>
+    stripmap_modes=[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>],       <span class="comment"># High-resolution modes only</span><br>
+    parts=[<span class="string">"PT1"</span>]                    <span class="comment"># Specific geographic region</span><br>
+)<br>
+<br>
+loader = <span class="function">get_sar_dataloader</span>(<br>
+    ...,<br>
+    filters=filters                   <span class="comment"># Apply the filter</span><br>
+)
+                </div>
+                
+                <h3>📊 Normalization with SARTransform</h3>
+                <div class="info-box">
+                    <h4>Level-Specific Data Normalization</h4>
+                    <p>The <code>SARTransform</code> class provides processing-level-aware transformations.<br><br>
+                    Each SAR processing level (raw, rc, rcmc, az) has different signal characteristics and dynamic ranges, requiring tailored normalization strategies.</p>
+                </div>
+                
+                <div class="parameter-grid">
+                    <div class="parameter-card">
+                        <h4>🎯 Why Level-Specific Normalization?</h4>
+                        <p>Each processing level represents different signal stages:<br>
+                        • <strong>Raw/RC/RCMC</strong>: Compressed signal domain (similar ranges)<br>
+                        • <strong>Azimuth (AZ)</strong>: Focused image domain (different range)</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>📈 Transform Functions</h4>
+                        <p>Each transform is a callable function applied to tensors:<br>
+                        • <code>transform_raw</code>: Applied to Level 0 data<br>
+                        • <code>transform_rc</code>: Applied to range compressed<br>
+                        • <code>transform_rcmc</code>: Applied to RCMC data<br>
+                        • <code>transform_az</code>: Applied to focused data</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>🔧 Min-Max Normalization</h4>
+                        <p>Maya4 provides pre-computed statistics:<br>
+                        • <code>RC_MIN, RC_MAX</code>: For compressed levels<br>
+                        • <code>GT_MIN, GT_MAX</code>: For ground truth (AZ)<br><br>
+                        These ensure consistent normalization across the dataset.</p>
+                    </div>
+                    <div class="parameter-card">
+                        <h4>⚡ Custom Transforms</h4>
+                        <p>You can provide any callable transformation:<br>
+                        • Standard scaling (z-score)<br>
+                        • Log scaling for amplitude<br>
+                        • Custom domain-specific preprocessing<br>
+                        • Augmentation pipelines</p>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">from</span> maya4 <span class="keyword">import</span> SARTransform, minmax_normalize<br>
+<span class="keyword">from</span> maya4 <span class="keyword">import</span> RC_MIN, RC_MAX, GT_MIN, GT_MAX<br>
+<span class="keyword">import</span> functools<br>
+<br>
+<span class="comment"># Create level-specific normalization transforms</span><br>
+transforms = <span class="function">SARTransform</span>(<br>
+    <span class="comment"># Raw data normalization (Level 0)</span><br>
+    transform_raw=functools.<span class="function">partial</span>(<br>
+        minmax_normalize,<br>
+        array_min=RC_MIN,          <span class="comment"># Pre-computed minimum for compressed data</span><br>
+        array_max=RC_MAX           <span class="comment"># Pre-computed maximum for compressed data</span><br>
+    ),<br>
+    <br>
+    <span class="comment"># Range Compressed normalization</span><br>
+    transform_rc=functools.<span class="function">partial</span>(<br>
+        minmax_normalize,<br>
+        array_min=RC_MIN,<br>
+        array_max=RC_MAX<br>
+    ),<br>
+    <br>
+    <span class="comment"># RCMC normalization (same range as RC)</span><br>
+    transform_rcmc=functools.<span class="function">partial</span>(<br>
+        minmax_normalize,<br>
+        array_min=RC_MIN,<br>
+        array_max=RC_MAX<br>
+    ),<br>
+    <br>
+    <span class="comment"># Azimuth focused normalization (different range!)</span><br>
+    transform_az=functools.<span class="function">partial</span>(<br>
+        minmax_normalize,<br>
+        array_min=GT_MIN,          <span class="comment"># Different statistics for focused data</span><br>
+        array_max=GT_MAX<br>
+    )<br>
+)<br>
+<br>
+loader = <span class="function">get_sar_dataloader</span>(<br>
+    ...,<br>
+    transform=transforms              <span class="comment"># Apply level-aware transforms</span><br>
+)
+                </div>
+                
+                <div class="info-box">
+                    <h4>💡 Pro Tip: Custom Normalization</h4>
+                    <p>For custom normalization strategies, you can pass any callable or create your own SARTransform:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment"># Example: Custom log-scale normalization for amplitude</span><br>
+<span class="keyword">def</span> <span class="function">log_normalize</span>(x):<br>
+    <span class="keyword">return</span> torch.<span class="function">log</span>(torch.<span class="function">abs</span>(x) + <span class="number">1e-10</span>)<br>
+<br>
+<span class="comment"># Example: Standard scaling (z-score)</span><br>
+<span class="keyword">def</span> <span class="function">standard_scale</span>(x, mean, std):<br>
+    <span class="keyword">return</span> (x - mean) / std<br>
+<br>
+<span class="comment"># Apply to all levels</span><br>
+transforms = <span class="function">SARTransform</span>(<br>
+    transform_rcmc=log_normalize,<br>
+    transform_az=functools.<span class="function">partial</span>(standard_scale, mean=<span class="number">0.5</span>, std=<span class="number">0.2</span>)<br>
+)
+                </div>
                 
                 <h3>Patch Order Comparison</h3>
                 <table class="comparison-table">
@@ -901,7 +1083,7 @@ loader = <span class="function">get_sar_dataloader</span>(
                         <tr>
                             <td><strong>col</strong></td>
                             <td>Top→bottom, left→right (vertical raster scan)</td>
-                            <td>Range direction analysis, vertical features</td>
+                            <td>Range direction analysis, horizontal features</td>
                             <td>Medium</td>
                         </tr>
                         <tr>
@@ -916,14 +1098,15 @@ loader = <span class="function">get_sar_dataloader</span>(
                 <h3>Block Pattern Sampling</h3>
                 <div class="info-box">
                     <h4>Stratified Coverage</h4>
-                    <p>Block pattern divides each product into a grid of blocks and samples within each block. This ensures representative sampling across the entire SAR product, capturing diverse spatial characteristics.</p>
+                    <p>Block pattern divides each product into a grid of blocks and samples within each block.<br><br>
+                    This ensures representative sampling across the entire SAR product, capturing diverse spatial characteristics.</p>
                 </div>
                 
                 <div class="code-block">
-loader = <span class="function">get_sar_dataloader</span>(
-    ...,
-    block_pattern=(<span class="number">32</span>, <span class="number">32</span>),  <span class="comment"># 32×32 grid of blocks</span>
-    patch_order=<span class="string">'row'</span>        <span class="comment"># Within each block</span>
+loader = <span class="function">get_sar_dataloader</span>(<br>
+    ...,<br>
+    block_pattern=(<span class="number">32</span>, <span class="number">32</span>),  <span class="comment"># 32×32 grid of blocks</span><br>
+    patch_order=<span class="string">'row'</span>        <span class="comment"># Within each block</span><br>
 )
                 </div>
                 
@@ -931,15 +1114,18 @@ loader = <span class="function">get_sar_dataloader</span>(
                 <div class="parameter-grid">
                     <div class="parameter-card">
                         <h4>Patch Concatenation</h4>
-                        <p>Stack multiple patches into larger samples for sequence learning. Specify axis: 0 (vertical) or 1 (horizontal).</p>
+                        <p>Stack multiple patches into larger samples for sequence learning.<br><br>
+                        Specify axis: 0 (vertical) or 1 (horizontal).</p>
                     </div>
                     <div class="parameter-card">
                         <h4>Balanced Sampling</h4>
-                        <p>Use K-means clustering on lat/lon to ensure geographic diversity. Requires sklearn and ~10+ products.</p>
+                        <p>Use K-means clustering on lat/lon to ensure geographic diversity.<br><br>
+                        Requires sklearn and ~10+ products.</p>
                     </div>
                     <div class="parameter-card">
                         <h4>Lazy Loading</h4>
-                        <p>In online mode, only required chunks are downloaded on-demand. Metadata downloaded first, data chunks as needed.</p>
+                        <p>In online mode, only required chunks are downloaded on-demand.<br><br>
+                        Metadata downloaded first, data chunks as needed.</p>
                     </div>
                 </div>
             </div>
@@ -971,8 +1157,8 @@ loader = <span class="function">get_sar_dataloader</span>(
                     <select id="use-case">
                         <option value="prototype">Fast Prototyping (1 product, debugging)</option>
                         <option value="training">Full Training (multi-product, optimized)</option>
-                        <option value="vertical">Vertical Slice Analysis (range direction)</option>
-                        <option value="horizontal">Horizontal Slice Analysis (azimuth direction)</option>
+                        <option value="vertical">Vertical Slice Analysis (azimuth direction)</option>
+                        <option value="horizontal">Horizontal Slice Analysis (range direction)</option>
                         <option value="sequence">Sequence Learning (transformer-ready)</option>
                     </select>
                     

@@ -1,7 +1,8 @@
 [project]
 name = 'maya4'
-version = '0.1.0'
+version = '0.1.2'
 description = 'SAR data processing and focusing utilities with dataloader for Sentinel-1 products'
+readme = 'README.md'
 authors = [
   { name = 'Roberto Del Prete', email = 'roberto.delprete@esa.int' }
 ]
