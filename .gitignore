@@ -31,7 +31,7 @@ ENV/
 
 
 # Images
-# *.png
+*.png
 *.jpg
 *.jpeg
 *.gif
