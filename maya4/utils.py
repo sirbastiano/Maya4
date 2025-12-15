@@ -52,8 +52,33 @@ def _ensure_dataloader_dependencies() -> None:
 
     SARTransform = _SARTransform  # type: ignore[assignment]
     get_sar_dataloader = _get_sar_dataloader  # type: ignore[assignment]
+class BaseFilter: 
+    def __init__(self):
+        pass
+    def matches(self, record: dict) -> bool:
+        raise NotImplementedError
+    def filter_products(self, df: pd.DataFrame) -> pd.DataFrame:
+        raise NotImplementedError
+class SampleFilterRegex(BaseFilter):
+    def __init__(self, regex_list: List[str]):
+        """
+        Initialize a filter for SAR dataset samples using regex patterns.
 
-class SampleFilter:
+        Args:
+            regex_list (List[str]): List of regex patterns to match sample attributes.
+        """
+        self.regex_list = [re.compile(r) for r in regex_list]
+    def matches(self, product: str) -> bool:
+        for pattern in self.regex_list:
+            if not pattern.search(product):
+                return False
+        return True
+    def filter_products(self, df: pd.DataFrame) -> pd.DataFrame:
+        mask = pd.Series([False] * len(df))
+        for pattern in self.regex_list:
+            mask |= df["full_name"].apply(lambda x: bool(pattern.search(str(x))))
+        return df[mask]
+class SampleFilter(BaseFilter):
     def __init__(self, parts: Optional[List[str]]=None, years: Optional[List[int]] = None, months: Optional[List[int]] = None, polarizations: Optional[List[str]] = None, stripmap_modes: Optional[List[int]] = None):
         """
         Initialize a filter for SAR dataset samples.
@@ -95,7 +120,7 @@ class SampleFilter:
         if self.parts and record.get('part') not in self.parts:
             return False
         return True
-    def _filter_products(self, df: pd.DataFrame) -> pd.DataFrame:
+    def filter_products(self, df: pd.DataFrame) -> pd.DataFrame:
         mask = pd.Series([True] * len(df))
         if len(self.years) > 0:
             mask &= df["acquisition_date"].dt.year.isin(self.years)
@@ -489,7 +514,7 @@ def get_balanced_sample_files(
     
     # Apply SampleFilter if provided
     if sample_filter is not None:
-        filtered_files = sample_filter._filter_products(parsed_df)
+        filtered_files = sample_filter.filter_products(parsed_df)
         filtered_files = pd.DataFrame(filtered_files)
         filtered_files.sort_values(by=['full_name'], inplace=True)
         

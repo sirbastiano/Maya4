@@ -122,14 +122,14 @@ class TestPositionalEncoding2D:
         assert output.shape == (64, 64, 4)
 
 
-class TestPositionalEncodingRow:
-    """Tests for PositionalEncodingRow class."""
+class TestPositionalEncodingAzimuthAndRange:
+    """Tests for PositionalEncodingAzimuth and PositionalEncodingRange classes."""
     
-    def test_forward_shape(self):
-        """Test that forward produces correct output shape."""
-        from maya4.dataloader import PositionalEncodingRow
+    def test_azimuth_forward_shape_real(self):
+        """Test that azimuth encoding produces correct output shape for real input."""
+        from maya4.dataloader import PositionalEncodingAzimuth
         
-        pe = PositionalEncodingRow(complex_valued=False, concat=True)
+        pe = PositionalEncodingAzimuth(complex_valued=False, concat=True)
         
         # Create sample input (height, width, 2) for real/imag
         inp = np.random.randn(64, 64, 2).astype(np.float32)
@@ -138,8 +138,58 @@ class TestPositionalEncodingRow:
         
         output = pe.forward(inp, position, max_length)
         
-        # Should add one channel for positional encoding
-        assert output.shape == (64, 64, 3)
+        # Should add 2 channels: azimuth + zero padding
+        assert output.shape == (64, 64, 4)
+    
+    def test_range_forward_shape_real(self):
+        """Test that range encoding produces correct output shape for real input."""
+        from maya4.dataloader import PositionalEncodingRange
+        
+        pe = PositionalEncodingRange(complex_valued=False, concat=True)
+        
+        # Create sample input (height, width, 2) for real/imag
+        inp = np.random.randn(64, 64, 2).astype(np.float32)
+        position = (10, 20)
+        max_length = (1000, 1000)
+        
+        output = pe.forward(inp, position, max_length)
+        
+        # Should add 2 channels: zero padding + range
+        assert output.shape == (64, 64, 4)
+    
+    def test_azimuth_forward_shape_complex(self):
+        """Test that azimuth encoding produces correct output shape for complex input."""
+        from maya4.dataloader import PositionalEncodingAzimuth
+        
+        pe = PositionalEncodingAzimuth(complex_valued=True, concat=True)
+        
+        # Create sample complex input (height, width)
+        inp = (np.random.randn(64, 64) + 1j * np.random.randn(64, 64)).astype(np.complex64)
+        position = (10, 20)
+        max_length = (1000, 1000)
+        
+        output = pe.forward(inp, position, max_length)
+        
+        # Should add 1 complex channel (azimuth in imaginary part)
+        assert output.shape == (64, 64, 2)
+        assert np.iscomplexobj(output)
+    
+    def test_range_forward_shape_complex(self):
+        """Test that range encoding produces correct output shape for complex input."""
+        from maya4.dataloader import PositionalEncodingRange
+        
+        pe = PositionalEncodingRange(complex_valued=True, concat=True)
+        
+        # Create sample complex input (height, width)
+        inp = (np.random.randn(64, 64) + 1j * np.random.randn(64, 64)).astype(np.complex64)
+        position = (10, 20)
+        max_length = (1000, 1000)
+        
+        output = pe.forward(inp, position, max_length)
+        
+        # Should add 1 complex channel (range in real part)
+        assert output.shape == (64, 64, 2)
+        assert np.iscomplexobj(output)
 
 
 class TestPositionalEncodingFactory:
@@ -152,12 +202,27 @@ class TestPositionalEncodingFactory:
         pe = create_positional_encoding_module("2d", complex_valued=False)
         assert isinstance(pe, PositionalEncoding2D)
     
-    def test_create_row_encoding(self):
-        """Test creating row positional encoding."""
-        from maya4.dataloader import PositionalEncodingRow, create_positional_encoding_module
+    def test_create_azimuth_encoding(self):
+        """Test creating azimuth (row) positional encoding."""
+        from maya4.dataloader import PositionalEncodingAzimuth, create_positional_encoding_module
         
+        pe = create_positional_encoding_module("azimuth", complex_valued=False)
+        assert isinstance(pe, PositionalEncodingAzimuth)
+        
+        # Also test 'row' alias
         pe = create_positional_encoding_module("row", complex_valued=False)
-        assert isinstance(pe, PositionalEncodingRow)
+        assert isinstance(pe, PositionalEncodingAzimuth)
+    
+    def test_create_range_encoding(self):
+        """Test creating range (column) positional encoding."""
+        from maya4.dataloader import PositionalEncodingRange, create_positional_encoding_module
+        
+        pe = create_positional_encoding_module("range", complex_valued=False)
+        assert isinstance(pe, PositionalEncodingRange)
+        
+        # Also test 'col' alias
+        pe = create_positional_encoding_module("col", complex_valued=False)
+        assert isinstance(pe, PositionalEncodingRange)
     
     def test_invalid_encoding_type(self):
         """Test that invalid encoding type raises error."""
@@ -241,7 +306,8 @@ class TestSARZarrDataset:
             patch_size=(128, 128),
             positional_encoding="2d",
             online=False,
-            verbose=False
+            verbose=False,
+            use_balanced_sampling=False  # Add this to avoid assertion error
         )
         
         assert isinstance(dataset.positional_encoding_module, PositionalEncoding2D)

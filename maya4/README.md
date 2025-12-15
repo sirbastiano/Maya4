@@ -485,6 +485,44 @@ dataloader = get_sar_dataloader(
 )
 ```
 
+### SampleFilterRegex
+
+Filter data using regex patterns to match specific product names:
+
+```python
+from maya4.utils import SampleFilterRegex
+
+# Create regex filter - matches products containing specific patterns
+filter = SampleFilterRegex(
+    regex_list=[
+        "s1a-s1-raw-s-hh-.*",  # Match all S1A stripmap HH products
+        ".*-20241008.*",        # Match products from specific date
+        ".*-056012-.*"          # Match specific orbit number
+    ]
+)
+
+# Or match exact product names
+filter = SampleFilterRegex(
+    regex_list=["s1a-s1-raw-s-hh-20241008t151239-20241008t151255-056012-06d9c9.zarr"]
+)
+
+# Use with dataloader
+dataloader = get_sar_dataloader(
+    data_dir="/Data/sar_focusing",
+    filters=filter,
+    online=False
+)
+```
+
+**Key differences from SampleFilter:**
+- `SampleFilterRegex`: Pattern-based matching using regular expressions for specific products selection
+- `SampleFilter`: Structured filtering by metadata fields (years, months, polarizations, etc.)
+
+Use `SampleFilterRegex` when you need to:
+- Match specific product filenames
+- Filter by complex patterns (e.g., date ranges, orbit numbers)
+- Select products that don't fit structured metadata criteria
+
 ### Balanced Sampling
 
 Ensure balanced representation across splits:

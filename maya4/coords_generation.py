@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from maya4.dataloader import SARZarrDataset
@@ -42,6 +42,7 @@ class LazyCoordinateGenerator:
         self.y_range = y_range
         self.x_range = x_range
         self.patch_order = patch_order
+        assert patch_order in ["row", "col", "chunk"], f"Invalid patch_order: {patch_order}"
         self.block_pattern = block_pattern
         self.zfile = zfile
         self.dataset = dataset

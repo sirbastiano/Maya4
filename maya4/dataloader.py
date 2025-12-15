@@ -29,7 +29,7 @@ from maya4.api import download_metadata_from_product, list_base_files_in_repo, l
 from maya4.caching import ChunkCache
 from maya4.coords_generation import LazyCoordinateGenerator, LazyCoordinateRange
 from maya4.normalization import SARTransform
-from maya4.positional_encoding import PositionalEncoding2D, PositionalEncodingRow, create_positional_encoding_module
+from maya4.positional_encoding import PositionalEncoding2D, PositionalEncodingAzimuth, PositionalEncodingRange, create_positional_encoding_module
 from maya4.utils import (
     GT_MAX,
     GT_MIN,
@@ -87,12 +87,10 @@ class SARZarrDataset(Dataset):
         level_from (str, optional): Key for the input SAR processing level. Defaults to "rcmc".
         level_to (str, optional): Key for the target SAR processing level. Defaults to "az".
         patch_mode (str, optional): Patch extraction mode: "rectangular", or "parabolic". Defaults to "rectangular".
-        parabola_a (float, optional): Curvature parameter for parabolic patch mode. Defaults to 0.001.
         save_samples (bool, optional): If True, saves computed patch indices to disk. Defaults to True.
         buffer (Tuple[int, int], optional): Buffer (margin) to avoid sampling near image edges. Defaults to (100, 100).
         stride (Tuple[int, int], optional): Stride for patch extraction. Defaults to (50, 50).
         max_base_sample_size (Tuple[int, int], optional): Maximum base sample size. Defaults to (-1, -1).
-        backend (str, optional): Backend for loading Zarr data, either "zarr" or "dask". Defaults to "zarr".
         verbose (bool, optional): If True, prints verbose output. Defaults to True.
         cache_size (int, optional): Maximum number of chunks to cache in memory.
         positional_encoding (bool, optional): If True, adds positional encoding to input patches. Defaults to True.
@@ -138,7 +136,6 @@ class SARZarrDataset(Dataset):
         buffer: Tuple[int, int] = (100, 100),
         stride: Tuple[int, int] = (50, 50),
         block_pattern: Optional[Tuple[int, int]] = None,
-        backend: str = "zarr",  # "zarr" or "dask"
         verbose: bool = True,
         cache_size: int = 1000,
         positional_encoding: str = "2d",
@@ -157,10 +154,11 @@ class SARZarrDataset(Dataset):
         self.level_to = level_to
 
         self.complex_valued = complex_valued
+        assert buffer[0] >= 0 and buffer[1] >= 0, "Buffer values must be non-negative"
         self.buffer = buffer
+        assert stride[0] >= -1 and stride[1] >= -1, "Stride values must be positive"
         self.stride = stride
         self.block_pattern = block_pattern
-        self.backend = backend
         self.verbose = verbose
         self.save_samples = save_samples
         self.online = online
@@ -168,7 +166,8 @@ class SARZarrDataset(Dataset):
         self._max_products = max_products
         self._samples_per_prod = samples_per_prod
         self.max_stripmap_modes = max_stripmap_modes
-        self.use_balanced_sampling = use_balanced_sampling
+        self.use_balanced_sampling = use_balanced_sampling 
+        assert not (self.use_balanced_sampling is True and self.online is False), "Balanced sampling requires online=True to access remote data"
         self.split = split
 
         self._patch: Dict[str, np.ndarray] = {self.level_from: np.array([0]), self.level_to: np.array([0])}
@@ -372,7 +371,7 @@ class SARZarrDataset(Dataset):
             return
 
         # Filter files using SampleFilter
-        self._files = self.filters._filter_products(df).copy()
+        self._files = self.filters.filter_products(df).copy()
         self._files.sort_values(by=["full_name"], inplace=True)
 
         # Apply balanced sampling if enabled
@@ -857,8 +856,6 @@ def get_sar_dataloader(
         buffer (Tuple[int, int], optional): Buffer size. Defaults to (100, 100).
         stride (Tuple[int, int], optional): Stride for patch extraction. Defaults to (50, 50).
         positional_encoding (bool, optional): If True, adds positional encoding to patches. Defaults to True.
-        backend (str, optional): Backend for loading Zarr data. Defaults to "zarr".
-        parabola_a (float, optional): Parabola parameter for patch extraction. Defaults to 0.001.
         shuffle_files (bool, optional): Shuffle file order. Defaults to True.
         patch_order (str, optional): Patch extraction order. Defaults to "row".
         complex_valued (bool, optional): If True, loads data as complex-valued. Defaults to False.
@@ -928,9 +925,7 @@ if __name__ == "__main__":
         patch_order="col",
         transform=transforms,
         max_base_sample_size=(-1, -1),
-        # patch_mode="parabolic",
-        # parabola_a=0.0005,
-        # k=10
+
     )
     for i, (x_batch, y_batch) in enumerate(loader):
         print(f"Batch {i}: x {x_batch.shape}, y {y_batch.shape}")

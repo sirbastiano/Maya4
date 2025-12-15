@@ -58,6 +58,7 @@ from .utils import (
     RC_MAX,
     RC_MIN,
     SampleFilter,
+    SampleFilterRegex,
     create_dataloader_from_config,
     create_dataloaders,
     create_transforms_from_config,
@@ -119,6 +120,7 @@ __all__ = [
     'get_part_from_filename',
     'parse_product_filename',
     'SampleFilter',
+    'SampleFilterRegex',
     'display_inference_results',
     'get_balanced_sample_files',
     'create_transforms_from_config',
@@ -150,6 +152,7 @@ __all__ = [
     'get_sar_dataloader',
     'SARDataloader',
     'SampleFilter',
+    'SampleFilterRegex',
     
     # Normalization and transformation modules
     'SARTransform', 
