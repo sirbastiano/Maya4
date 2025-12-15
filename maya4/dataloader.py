@@ -53,7 +53,8 @@ __all__ = [
     "LazyCoordinateGenerator",
     "ChunkCache",
     "PositionalEncoding2D",
-    "PositionalEncodingRow",
+    "PositionalEncodingAzimuth",
+    "PositionalEncodingRange",
     "create_positional_encoding_module",
 ]
 
