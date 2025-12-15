@@ -243,7 +243,8 @@ class TestChunkCache:
             data_dir=str(temp_dir),
             patch_size=(128, 128),
             cache_size=10,
-            online=False
+            online=False,
+            use_balanced_sampling=False
         )
         
         cache = ChunkCache(dataset, cache_size=10)
@@ -258,7 +259,8 @@ class TestChunkCache:
             data_dir=str(temp_dir),
             patch_size=(128, 128),
             cache_size=10,
-            online=False
+            online=False,
+            use_balanced_sampling=False
         )
         dataset._stores[sample_zarr_store] = {
             'rcmc': zarr.open(str(sample_zarr_store / 'rcmc'), mode='r')
@@ -289,7 +291,8 @@ class TestSARZarrDataset:
             stride=(64, 64),
             cache_size=10,
             online=False,
-            verbose=False
+            verbose=False,
+            use_balanced_sampling=False
         )
         
         assert dataset.data_dir == Path(temp_dir)
@@ -321,7 +324,8 @@ class TestSARZarrDataset:
             patch_size=(128, 128),
             cache_size=10,
             online=False,
-            verbose=False
+            verbose=False,
+            use_balanced_sampling=False
         )
         
         assert isinstance(dataset.chunk_cache, ChunkCache)
@@ -338,7 +342,8 @@ class TestKPatchSampler:
             data_dir=str(temp_dir),
             patch_size=(128, 128),
             online=False,
-            verbose=False
+            verbose=False,
+            use_balanced_sampling=False
         )
         
         sampler = KPatchSampler(
@@ -364,7 +369,8 @@ class TestSARDataloader:
             data_dir=str(temp_dir),
             patch_size=(128, 128),
             online=False,
-            verbose=False
+            verbose=False,
+            use_balanced_sampling=False
         )
         
         sampler = KPatchSampler(
@@ -399,7 +405,8 @@ class TestIntegration:
             patch_size=(128, 128),
             cache_size=10,
             online=False,
-            verbose=False
+            verbose=False,
+            use_balanced_sampling=False
         )
         
         assert dataloader is not None
@@ -706,7 +713,8 @@ class TestDataloaderAccuracy:
             verbose=False,
             cache_size=10,
             online=False,
-            positional_encoding=False
+            positional_encoding=False,
+            use_balanced_sampling=False
         )
         
         # If files are available, test a patch
