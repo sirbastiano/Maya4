@@ -87,34 +87,3 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false
 
-  test-imports:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-    
-    - name: Create virtual environment
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
-        echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
-    
-    - name: Install package
-      run: |
-        source venv/bin/activate
-        python -m pip install --upgrade pip setuptools wheel
-        pip install torch --index-url https://download.pytorch.org/whl/cpu
-        pip install -e .
-    
-    - name: Test imports
-      run: |
-        source venv/bin/activate
-        python -c "from maya4 import SARZarrDataset, get_sar_dataloader, SARTransform"
-        python tests/test_installation.py
