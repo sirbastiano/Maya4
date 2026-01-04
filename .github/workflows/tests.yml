@@ -1,0 +1,89 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, pypi, feature/* ]
+  pull_request:
+    branches: [ main, pypi ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Create virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+    
+    - name: Install dependencies
+      run: |
+        source venv/bin/activate
+        python -m pip install --upgrade pip setuptools wheel
+        # Install package with all dependencies (dev + geospatial)
+        pip install -e ".[dev,geospatial]"
+        # Install PyTorch CPU-only version for CI (smaller, faster) - override the default
+        pip install --force-reinstall torch --index-url https://download.pytorch.org/whl/cpu
+    
+    - name: Verify installation
+      run: |
+        source venv/bin/activate
+        python -c "import maya4; print(f'Maya4 version: {maya4.__version__}')"
+        python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
+        python -c "import zarr; print(f'Zarr version: {zarr.__version__}')"
+        python -c "import huggingface_hub; print(f'HuggingFace Hub version: {huggingface_hub.__version__}')"
+        python -c "import pandas; print(f'Pandas version: {pandas.__version__}')"
+        python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
+        python -c "import folium; print(f'Folium version: {folium.__version__}')"
+        python -c "import geopandas; print(f'GeoPandas version: {geopandas.__version__}')"
+        pip list
+    
+    - name: Create data directory
+      run: |
+        sudo mkdir -p /Data/sar_focusing
+        sudo chmod 777 /Data/sar_focusing
+    
+    - name: Lint with flake8
+      run: |
+        source venv/bin/activate
+        # Only check for critical errors (syntax errors, undefined names)
+        flake8 maya4 --count --select=E9,F63,F7,F82 --show-source --statistics
+    
+    - name: Download test data with online mode
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        source venv/bin/activate
+        # Run online tests first to download required files
+        # HF_TOKEN is available as environment variable for huggingface_hub
+        pytest tests/test_online_download.py -v --tb=short -m online || echo "Online tests completed with status $?"
+    
+    - name: Run tests with pytest
+      run: |
+        source venv/bin/activate
+        # Run all tests (excluding obsolete test_sarzarrdataset.py)
+        pytest tests/ --ignore=tests/test_sarzarrdataset.py -v --tb=short --cov=maya4 --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
