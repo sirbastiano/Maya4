@@ -199,7 +199,7 @@ transform = SARTransform.create_minmax_normalized_transform(
 
 # Load from Hugging Face Hub
 dataloader = get_sar_dataloader(
-    data_dir='hf://datasets/Maya4/PT1',  # Hugging Face dataset
+    data_dir='/Data/maya4_dataset',  # Local dataset directory
     level_from='rcmc',                    # Input: Range Cell Migration Corrected
     level_to='ac',                        # Target: Azimuth Compressed (focused)
     batch_size=16,
@@ -233,7 +233,7 @@ filters = SampleFilter(
 
 # Experiment with different processing level combinations
 dataloader_raw_to_rc = get_sar_dataloader(
-    data_dir='hf://datasets/Maya4/PT2',
+    data_dir='/Data/maya4_dataset',
     filters=filters,
     level_from='raw',      # Start from raw echoes
     level_to='rc',         # Learn range compression
@@ -255,7 +255,7 @@ dataloader_raw_to_rc = get_sar_dataloader(
 from maya4 import create_dataloaders
 
 config = {
-    'data_dir': '/Data/sar_focusing',
+    'data_dir': '/Data/maya4_dataset',
     'level_from': 'rcmc',
     'level_to': 'ac',
     'patch_size': [1000, 1],
@@ -329,7 +329,7 @@ from maya4 import SARZarrDataset
 
 # Access intermediate representations
 dataset = SARZarrDataset(
-    data_dir='hf://datasets/Maya4/PT1',
+    data_dir='/Data/maya4_dataset',
     level_from='rcmc',     # Input processing level
     level_to='ac',         # Target processing level
     patch_size=(1000, 100),
