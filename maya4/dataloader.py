@@ -437,6 +437,7 @@ class SARZarrDataset(Dataset):
             if self.verbose:
                 print(f"Found {len(repos)} repositories by author '{self.author}': {repos}")
             self.remote_files = {}
+            records = []
             for repo in repos:
                 repo_files = list_base_files_in_repo(
                     repo_id=repo,
@@ -446,7 +447,17 @@ class SARZarrDataset(Dataset):
                     print(f"Found {len(repo_files)} files in the remote repository: '{repo}'")
                 repo_name = repo.split('/')[-1]
                 self.remote_files[repo_name] = repo_files
-            records = [r for r in (parse_product_filename(os.path.join(self.data_dir, part, f)) for part, files in self.remote_files.items() for f in files) if r is not None]
+                
+                # Parse records incrementally to allow early exit
+                repo_records = [r for r in (parse_product_filename(os.path.join(self.data_dir, repo_name, f)) for f in repo_files) if r is not None]
+                records.extend(repo_records)
+                
+                # Stop if we have enough candidates
+                if self._max_products > 0 and len(records) >= self._max_products * 5:
+                    if self.verbose:
+                        print(f"Found enough candidates ({len(records)}), stopping repository search.")
+                    break
+            
             print(f"Total files found in remote repository: {len(records)}")
             df = pd.DataFrame(records)
         else:
